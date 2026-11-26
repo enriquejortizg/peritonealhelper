@@ -137,6 +137,17 @@ button:focus-visible, a:focus-visible, input:focus-visible { outline: 3px solid 
 .listen { align-self: flex-start; border: 2px solid var(--accent); color: var(--accent); background: transparent; border-radius: 999px; padding: 10px 18px 10px 14px; min-height: 48px; font: 700 1em var(--font-body); cursor: pointer; display: inline-flex; gap: 8px; align-items: center; }
 .listen svg { width: 24px; height: 24px; }
 .listen.speaking { background: var(--accent); color: var(--on-accent); }
+.listen:disabled { opacity: .45; border-style: dashed; cursor: not-allowed; }
+.media, .say { display: flex; gap: 8px; flex-wrap: wrap; align-items: center; }
+/* Sin esto, el contenido largo se encoge en vez de desplazarse (desplegables cortados) */
+.body > * { flex-shrink: 0; }
+#app { position: relative; }
+.modal { position: absolute; inset: 0; z-index: 6; background: rgba(4, 22, 19, .55); display: flex; align-items: flex-end; padding: 16px; }
+.sheet { width: 100%; background: var(--surface); color: var(--ink); border-radius: 20px; padding: 18px; display: grid; gap: 12px; }
+.sheet h3 { margin: 0; font-family: var(--font-display); font-size: 1.25em; }
+.sheet p { margin: 0; }
+.sheet .row { display: grid; gap: 8px; }
+.sheet video { width: 100%; max-height: 60vh; border-radius: 12px; background: #000; }
 
 .timer { border-radius: 20px; border: 2px solid var(--accent); padding: 16px; display: grid; gap: 12px; justify-items: center; text-align: center; }
 .timer .clock { font-family: var(--font-display); font-weight: 700; font-size: 3em; line-height: 1; font-variant-numeric: tabular-nums; color: var(--accent); }
@@ -308,6 +319,9 @@ html.modo-app, html.modo-app body { height: 100%; margin: 0; }
     copy: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><rect x="8" y="8" width="12" height="12" rx="2"/><path d="M16 8V5.5A1.5 1.5 0 0 0 14.5 4h-9A1.5 1.5 0 0 0 4 5.5v9A1.5 1.5 0 0 0 5.5 16H8"/></svg>',
     chev: '<svg class="chev" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="M6 9l6 6 6-6"/></svg>',
     play: '<svg viewBox="0 0 24 24" fill="currentColor"><path d="M7 4.5v15l12-7.5z"/></svg>',
+    pause: '<svg viewBox="0 0 24 24" fill="currentColor"><rect x="6" y="5" width="4" height="14" rx="1"/><rect x="14" y="5" width="4" height="14" rx="1"/></svg>',
+    stop: '<svg viewBox="0 0 24 24" fill="currentColor"><rect x="6" y="6" width="12" height="12" rx="2"/></svg>',
+    video: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linejoin="round"><rect x="3" y="6" width="13" height="12" rx="2"/><path d="M16 10l5-3v10l-5-3z"/></svg>',
     bag: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M7 4h10v12a5 5 0 0 1-10 0z"/><path d="M12 21v2M10 2h4"/><path d="M7 11h10"/></svg>',
     machine: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="7" width="18" height="12" rx="2"/><rect x="6" y="10" width="7" height="4" rx="1"/><path d="M16 11h2M16 14h2M8 4h8"/></svg>',
     qr: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><path d="M14 14h3v3M21 14v.01M14 21h3M20 18v3"/></svg>',
@@ -356,7 +370,7 @@ html.modo-app, html.modo-app body { height: 100%; margin: 0; }
     cap: `<svg viewBox="0 0 160 120" fill="none" stroke="currentColor" stroke-width="5" stroke-linecap="round" stroke-linejoin="round">
       <path d="M10 62h60"/><rect x="70" y="50" width="24" height="24" rx="5"/>
       <rect x="104" y="46" width="30" height="32" rx="8" fill="currentColor" fill-opacity=".25"/><path d="M98 62h4"/>
-      <path d="M112 22l8 8 16-16"/><text x="60" y="104" font-size="13" text-anchor="middle" fill="currentColor" stroke="none" font-family="Atkinson Hyperlegible, sans-serif" font-weight="700">tapón nuevo cada vez</text></svg>`,
+      <path d="M112 22l8 8 16-16"/><text x="80" y="104" font-size="13" text-anchor="middle" fill="currentColor" stroke="none" font-family="Atkinson Hyperlegible, sans-serif" font-weight="700">tapón nuevo cada vez</text></svg>`,
     look: `<svg viewBox="0 0 160 120" fill="none" stroke="currentColor" stroke-width="5" stroke-linecap="round" stroke-linejoin="round">
       <path d="M30 20h56v62a28 28 0 0 1-56 0z"/><path d="M30 54h56v28a28 28 0 0 1-56 0z" fill="currentColor" fill-opacity=".2" stroke="none"/>
       <path d="M100 62c8-12 18-18 26-18s18 6 26 18c-8 12-18 18-26 18s-18-6-26-18z"/><circle cx="126" cy="62" r="7" fill="currentColor"/></svg>`
@@ -371,6 +385,8 @@ html.modo-app, html.modo-app body { height: 100%; margin: 0; }
     'El paciente y yo tenemos cubrebocas',
     'Me quité anillos y reloj'
   ];
+  // Cada paso puede tener video: ruta del archivo, por ejemplo video: 'videos/lavado-manos.mp4'.
+  // Sin video, el botón "Ver video" aparece deshabilitado.
   const STEPS = [
     { pic: 'hands', title: 'Lávese las manos', text: 'Lave sus manos con agua y jabón. Frote entre los dedos y debajo de las uñas. Séquelas con una toalla de papel.', tip: 'No toque nada más después de lavarse. Si toca algo, vuelva a lavarse.', timer: 60, timerLabel: 'Frote las manos hasta que termine el reloj' },
     { pic: 'mask', title: 'Póngase el cubrebocas', text: 'Usted y el paciente se ponen el cubrebocas. Debe tapar la nariz y la boca.' },
@@ -424,11 +440,20 @@ html.modo-app, html.modo-app body { height: 100%; margin: 0; }
     screen: CFG ? 'home' : 'welcome', step: 0, checks: PREP.map(() => false), large: false,
     timer: null, remaining: 0, total: 0, running: false, done: false,
     reg: { vol: 2000, peso: '' }, aspect: 'claro', alarmOpen: null,
-    draft: newDraft(), fromSummary: false, fromQR: false, practice: false, confirmReset: false, scanT: null
+    draft: newDraft(), fromSummary: false, fromQR: false, practice: false, confirmReset: false, scanT: null,
+    session: null, modal: null, endAt: 0, announced: true, wake: null
   };
   function loadLog() { try { const v = JSON.parse(localStorage.getItem('dp-log') || 'null'); return Array.isArray(v) ? v : []; } catch (e) { return []; } }
   function saveLog() { try { localStorage.setItem('dp-log', JSON.stringify(LOG)); } catch (e) {} }
   let LOG = loadLog();
+  // Cada recambio es una sola entrada del registro (S.session.id). Elegir otro aspecto del líquido
+  // o volver a guardar actualiza esa misma entrada: se cuenta una vez y queda la última opción.
+  function upsertLog(fields) {
+    if (S.practice || !S.session) return;
+    let e = LOG.find(x => x.id === S.session.id);
+    if (!e) { e = { id: S.session.id, t: Date.now() }; LOG.push(e); }
+    Object.assign(e, fields); saveLog();
+  }
   try { S.large = localStorage.getItem('dp-large') === '1'; } catch (e) {}
 
   const app = document.getElementById('app');
@@ -438,21 +463,46 @@ html.modo-app, html.modo-app body { height: 100%; margin: 0; }
   const dayLabel = t => { const d = new Date(t), n = new Date(); if (d.toDateString() === n.toDateString()) return 'Hoy'; const y = new Date(n); y.setDate(n.getDate() - 1); return d.toDateString() === y.toDateString() ? 'Ayer' : d.toLocaleDateString('es'); };
 
   // ---------- Voz y sonido ----------
-  let speakingBtn = null;
-  function speak(text, btn) {
-    try {
-      if (!('speechSynthesis' in window)) throw 0;
-      speechSynthesis.cancel();
-      if (speakingBtn) speakingBtn.classList.remove('speaking');
-      const u = new SpeechSynthesisUtterance(text);
-      u.lang = 'es-ES'; u.rate = 0.88;
-      const v = speechSynthesis.getVoices().find(v => /^es/i.test(v.lang));
-      if (v) u.voice = v;
-      if (btn) { btn.classList.add('speaking'); speakingBtn = btn; u.onend = u.onerror = () => btn.classList.remove('speaking'); }
-      speechSynthesis.speak(u);
-    } catch (e) { toast('Este navegador no puede leer en voz alta. En la app real se usarán audios grabados.'); }
+  // El texto se lee frase por frase: así "Pausar" puede continuar después desde la frase en curso.
+  // (La pausa propia del navegador no es confiable en Android.)
+  const SP = { key: null, parts: [], idx: 0, state: 'idle' };
+  const canSpeak = () => { try { return !!window.speechSynthesis && typeof SpeechSynthesisUtterance !== 'undefined'; } catch (e) { return false; } };
+  function utter(text) {
+    const u = new SpeechSynthesisUtterance(text);
+    u.lang = 'es-ES'; u.rate = 0.88;
+    const v = speechSynthesis.getVoices().find(v => /^es/i.test(v.lang));
+    if (v) u.voice = v;
+    return u;
   }
-  function stopSpeak() { try { speechSynthesis.cancel(); } catch (e) {} }
+  function speakNext() {
+    if (SP.state !== 'playing') return;
+    if (SP.idx >= SP.parts.length) { sayStop(); return; }
+    const key = SP.key, idx = SP.idx, u = utter(SP.parts[idx]);
+    u.onend = () => { if (SP.state !== 'playing' || SP.key !== key || SP.idx !== idx) return; SP.idx++; speakNext(); };
+    u.onerror = e => { if (e && e.error !== 'interrupted' && e.error !== 'canceled' && SP.state === 'playing' && SP.key === key) sayStop(); };
+    speechSynthesis.speak(u);
+  }
+  // Escuchar → Pausar → Continuar (desde donde iba). Detener → la próxima vez empieza desde el principio.
+  function sayToggle(text) {
+    if (!canSpeak()) { toast('Este teléfono no puede leer en voz alta. En la app real se usarán audios grabados.'); return; }
+    if (SP.key === text && SP.state === 'playing') { SP.state = 'paused'; speechSynthesis.cancel(); }
+    else if (SP.key === text && SP.state === 'paused') { SP.state = 'playing'; speakNext(); }
+    else {
+      speechSynthesis.cancel();
+      Object.assign(SP, { key: text, parts: String(text).split(/(?<=[.!?])\s+/).map(s => s.trim()).filter(Boolean), idx: 0, state: 'playing' });
+      speakNext();
+    }
+    render();
+  }
+  function sayStop() { stopSpeak(); render(); }
+  function stopSpeak() { Object.assign(SP, { key: null, parts: [], idx: 0, state: 'idle' }); try { speechSynthesis.cancel(); } catch (e) {} }
+  function announce(text) { stopSpeak(); if (!canSpeak()) return; try { speechSynthesis.speak(utter(text)); } catch (e) {} }
+  function sayBtn(text) {
+    if (SP.key === text && SP.state !== 'idle') return `<div class="say">
+      <button class="listen ${SP.state === 'playing' ? 'speaking' : ''}" data-say="${esc(text)}">${SP.state === 'playing' ? I.pause + 'Pausar' : I.play + 'Continuar'}</button>
+      <button class="listen" data-saystop="1">${I.stop}Detener</button></div>`;
+    return `<button class="listen" data-say="${esc(text)}">${I.speaker}Escuchar</button>`;
+  }
   let actx = null;
   function beep() {
     try {
@@ -468,6 +518,25 @@ html.modo-app, html.modo-app body { height: 100%; margin: 0; }
     } catch (e) {}
     try { navigator.vibrate && navigator.vibrate([300, 150, 300]); } catch (e) {}
   }
+  // Alarma fuerte y larga para cuando el reloj termina con la app en segundo plano.
+  let alarmT = null;
+  function alarmBurst() {
+    try {
+      actx = actx || new (window.AudioContext || window.webkitAudioContext)();
+      if (actx.state === 'suspended') actx.resume();
+      [0, .3, .6, .9].forEach((off, i) => {
+        const o = actx.createOscillator(), g = actx.createGain(), t0 = actx.currentTime + off;
+        o.type = 'square'; o.frequency.value = i % 2 ? 784 : 1046; o.connect(g); g.connect(actx.destination);
+        g.gain.setValueAtTime(.0001, t0); g.gain.exponentialRampToValueAtTime(.8, t0 + .02);
+        g.gain.setValueAtTime(.8, t0 + .2); g.gain.exponentialRampToValueAtTime(.0001, t0 + .26);
+        o.start(t0); o.stop(t0 + .3);
+      });
+    } catch (e) {}
+    try { navigator.vibrate && navigator.vibrate([700, 250, 700, 250, 700]); } catch (e) {}
+  }
+  // Suena cada 2 segundos durante un minuto, o hasta que se vuelva a la app.
+  function startAlarm() { stopAlarm(); let n = 0; alarmBurst(); alarmT = setInterval(() => { if (++n >= 30 || !document.hidden) { stopAlarm(); return; } alarmBurst(); }, 2000); }
+  function stopAlarm() { clearInterval(alarmT); alarmT = null; }
   function toast(msg) {
     const old = document.querySelector('.toast'); if (old) old.remove();
     const t = document.createElement('div'); t.className = 'toast'; t.textContent = msg;
@@ -476,12 +545,40 @@ html.modo-app, html.modo-app body { height: 100%; margin: 0; }
   }
 
   // ---------- Temporizador ----------
-  function resetTimer(sec) { clearInterval(S.timer); S.timer = null; S.total = sec || 0; S.remaining = sec || 0; S.running = false; S.done = false; }
-  function tick() {
-    S.remaining = Math.max(0, S.remaining - 1);
-    if (S.remaining === 0) { clearInterval(S.timer); S.timer = null; S.running = false; S.done = true; beep(); speak('Tiempo terminado. Puede pasar al siguiente paso.'); render(); return; }
-    paintTimer();
+  // Cuenta contra la hora de término (endAt): sigue siendo exacto aunque el teléfono frene la app en segundo plano.
+  function resetTimer(sec) { clearInterval(S.timer); S.timer = null; S.total = sec || 0; S.remaining = sec || 0; S.running = false; S.done = false; S.endAt = 0; S.announced = true; stopAlarm(); releaseWake(); }
+  function startTimer() {
+    S.endAt = Date.now() + S.remaining * 1000; S.running = true; S.done = false; S.announced = false;
+    clearInterval(S.timer); S.timer = setInterval(tick, 500);
+    try { actx = actx || new (window.AudioContext || window.webkitAudioContext)(); if (actx.state === 'suspended') actx.resume(); } catch (e) {}
+    askNotify(); keepAwake();
   }
+  function pauseTimer() { tick(); clearInterval(S.timer); S.timer = null; S.running = false; S.endAt = 0; releaseWake(); }
+  function tick() {
+    if (!S.running) return;
+    S.remaining = Math.max(0, Math.ceil((S.endAt - Date.now()) / 1000));
+    if (S.remaining === 0) finishTimer(); else paintTimer();
+  }
+  function finishTimer() {
+    clearInterval(S.timer); S.timer = null; S.running = false; S.done = true; S.endAt = 0; releaseWake();
+    if (document.hidden) { startAlarm(); notifyDone(); }   // el aviso hablado se da al volver a la app
+    else { beep(); announceDone(); }
+    if (S.screen === 'step' && !S.modal) render();
+  }
+  function announceDone() { S.announced = true; announce('Tiempo terminado. Puede pasar al siguiente paso.'); }
+  function askNotify() { try { if ('Notification' in window && Notification.permission === 'default') Notification.requestPermission(); } catch (e) {} }
+  function notifyDone() {
+    try {
+      if (!('Notification' in window) || Notification.permission !== 'granted') return;
+      const title = 'Tiempo terminado';
+      const opts = { body: `Vuelva a la app: ${STEPS[S.step].title}.`, tag: 'temporizador', renotify: true, requireInteraction: true, vibrate: [700, 250, 700, 250, 700], icon: 'icons/icon-192.png' };
+      if (navigator.serviceWorker && navigator.serviceWorker.controller) navigator.serviceWorker.ready.then(r => r.showNotification(title, opts)).catch(() => {});
+      else new Notification(title, opts);
+    } catch (e) {}
+  }
+  // Mantiene la pantalla encendida mientras corre el reloj, para que el teléfono no frene la app.
+  function keepAwake() { try { if (navigator.wakeLock && !S.wake) navigator.wakeLock.request('screen').then(l => { S.wake = l; l.addEventListener('release', () => { S.wake = null; }); }).catch(() => {}); } catch (e) {} }
+  function releaseWake() { try { if (S.wake) S.wake.release(); } catch (e) {} S.wake = null; }
   function paintTimer() {
     const c = app.querySelector('.timer .clock'), r = app.querySelector('.ring b');
     if (c) c.textContent = fmt(S.remaining);
@@ -493,17 +590,66 @@ html.modo-app, html.modo-app body { height: 100%; margin: 0; }
     opts = opts || {};
     return `
       <div class="bar">
-        ${opts.back ? `<button class="iconbtn" data-go="${opts.back}" aria-label="Volver">${I.back}</button>` : `<div class="brand">${I.logo}<span>${APP_NAME}</span></div>`}
+        ${opts.back ? `<button class="iconbtn" ${opts.back === 'home' && inFlow() ? 'data-act="home-ask"' : `data-go="${opts.back}"`} aria-label="Volver">${I.back}</button>` : `<div class="brand">${I.logo}<span>${APP_NAME}</span></div>`}
         ${opts.back ? `<div class="brand" style="flex:1;justify-content:center"><span>${title}</span></div>` : ''}
         <div style="display:flex;gap:6px">
-          ${opts.back && CFG ? `<button class="iconbtn" data-go="home" aria-label="Inicio">${I.home}</button>` : ''}
+          ${inFlow()
+            ? `<button class="iconbtn" data-act="home-ask" aria-label="Inicio">${I.home}</button>`
+            : (opts.back && CFG ? `<button class="iconbtn" data-go="home" aria-label="Inicio">${I.home}</button>` : '')}
           ${opts.gear ? `<button class="iconbtn" data-go="settings" aria-label="Ajustes">${I.gear}</button>` : ''}
           <button class="iconbtn" id="aa" aria-pressed="${S.large}" aria-label="Letra grande">Aa</button>
         </div>
       </div>
       ${S.practice ? '<div class="proto practice">MODO PRÁCTICA · NO SE ANOTA EN EL REGISTRO</div>' : '<div class="proto">PROTOTIPO · CONTENIDO DE EJEMPLO</div>'}
       <div class="body">${inner}</div>
-      ${foot ? `<div class="foot">${foot}</div>` : ''}`;
+      ${foot ? `<div class="foot">${foot}</div>` : ''}
+      ${S.modal ? modalHTML() : ''}`;
+  }
+
+  function modalHTML() {
+    if (S.modal.type === 'home') {
+      const what = S.practice ? 'esta práctica' : 'este recambio';
+      return `<div class="modal" role="dialog" aria-modal="true" aria-labelledby="m-t"><div class="sheet">
+        <h3 id="m-t">¿Volver al inicio?</h3>
+        <p>Volverá a la pantalla principal y se perderá el progreso de ${what}. ¿Desea continuar?</p>
+        <div class="row">
+          <button class="btn alarm" data-act="home-yes">Sí, ir al inicio</button>
+          <button class="btn ghost wide" data-act="modal-close">No, seguir con ${S.practice ? 'la práctica' : 'el recambio'}</button>
+        </div></div></div>`;
+    }
+    const st = STEPS[S.step];
+    return `<div class="modal" role="dialog" aria-modal="true" aria-labelledby="m-t"><div class="sheet">
+      <h3 id="m-t">${st.title}</h3>
+      <video src="${esc(st.video)}" controls autoplay playsinline></video>
+      <button class="btn ghost wide" data-act="modal-close">Cerrar video</button></div></div>`;
+  }
+
+  // ---------- Recambio en curso ----------
+  // Pantallas de un recambio: se guardan en el teléfono para retomarlo si se cierra la app.
+  const FLOW = ['prep', 'step', 'aspect', 'register'];
+  const inFlow = () => FLOW.includes(S.screen);
+  function saveProgress() {
+    try {
+      if (!inFlow()) { localStorage.removeItem('dp-progress'); return; }
+      localStorage.setItem('dp-progress', JSON.stringify({
+        at: Date.now(), screen: S.screen, step: S.step, checks: S.checks, practice: S.practice, session: S.session, aspect: S.aspect, reg: S.reg,
+        timer: { total: S.total, remaining: S.remaining, running: S.running, endAt: S.endAt, done: S.done }
+      }));
+    } catch (e) {}
+  }
+  function restoreProgress() {
+    let p = null;
+    try { p = JSON.parse(localStorage.getItem('dp-progress') || 'null'); } catch (e) {}
+    if (!p || !CFG || !FLOW.includes(p.screen) || Date.now() - p.at > 12 * 3600 * 1000) return false;
+    Object.assign(S, { screen: p.screen, step: p.step, checks: p.checks, practice: p.practice, session: p.session, aspect: p.aspect, reg: p.reg });
+    const tm = p.timer || {};
+    S.total = tm.total || 0; S.remaining = tm.remaining || 0; S.done = !!tm.done; S.announced = true;
+    if (tm.running && tm.endAt) {
+      S.remaining = Math.max(0, Math.ceil((tm.endAt - Date.now()) / 1000));
+      if (S.remaining === 0) S.done = true;
+      else { S.endAt = tm.endAt; S.running = true; S.timer = setInterval(tick, 500); keepAwake(); }
+    }
+    return true;
   }
 
   function nextReminder() {
@@ -547,7 +693,7 @@ html.modo-app, html.modo-app body { height: 100%; margin: 0; }
         <div class="checks">
           ${PREP.map((p, i) => `<button class="check" role="checkbox" aria-checked="${S.checks[i]}" data-check="${i}"><span class="box">${I.check}</span><span>${p}</span></button>`).join('')}
         </div>
-        <button class="listen" data-say="${PREP.join('. ')}">${I.speaker}Escuchar</button>
+        ${sayBtn(PREP.join('. ') + '.')}
       `, `<button class="btn" data-go="step" ${all ? '' : 'disabled'}>${all ? 'Empezar los pasos' : `Faltan ${S.checks.filter(c => !c).length}`} ${I.next}</button>`, { back: 'home' });
     },
 
@@ -572,7 +718,12 @@ html.modo-app, html.modo-app body { height: 100%; margin: 0; }
         <h2 class="scr">${st.title}</h2>
         <div class="pic" role="img" aria-label="${st.title}">${P[st.pic]}</div>
         <p class="steptext">${st.text}</p>
-        <button class="listen" data-say="${st.title}. ${st.text} ${st.tip || ''}">${I.speaker}Escuchar</button>
+        <div class="media">
+          ${sayBtn(`${st.title}. ${st.text} ${st.tip || ''}`.trim())}
+          ${st.video
+            ? `<button class="listen" data-act="video">${I.video}Ver video</button>`
+            : `<button class="listen" disabled title="Todavía no hay video para este paso">${I.video}Ver video</button>`}
+        </div>
         ${timer}
         ${st.tip ? `<div class="tip">${I.alert}<span>${st.tip}</span></div>` : ''}
       `, `
@@ -589,7 +740,7 @@ html.modo-app, html.modo-app body { height: 100%; margin: 0; }
           <button class="choice" data-aspect="turbio">${ALARMS[0].icon}<span><b>Turbio o nublado</b><span>No se puede ver a través</span></span></button>
           <button class="choice" data-aspect="sangre">${ALARMS[1].icon}<span><b>Rosado o con sangre</b><span>Color rojo o café</span></span></button>
         </div>
-        <button class="listen" data-say="¿Cómo se ve el líquido que salió? Claro y amarillo es normal. Turbio, nublado o con sangre es una señal de alarma.">${I.speaker}Escuchar</button>
+        ${sayBtn('¿Cómo se ve el líquido que salió? Claro y amarillo es normal. Turbio, nublado o con sangre es una señal de alarma.')}
       `, '', { back: 'step' });
     },
 
@@ -629,7 +780,7 @@ html.modo-app, html.modo-app body { height: 100%; margin: 0; }
       return shell('Alarma', `
         <div class="banner alarm"><b>Atención: ${a.title.toLowerCase()}</b><span>${a.what}</span></div>
         <p class="steptext"><b>Qué hacer:</b> ${a.todo}</p>
-        <button class="listen" data-say="Atención. ${a.title}. ${a.what} ${a.todo}">${I.speaker}Escuchar</button>
+        ${sayBtn(`Atención. ${a.title}. ${a.what} ${a.todo}`)}
         ${callCard()}
         <div class="note">${S.practice ? 'Esto es una práctica: no se anotó en el registro.' : `El recambio quedó anotado como <b>${a.title.toLowerCase()}</b> en su registro, para que el equipo lo vea.`}</div>
       `, `<button class="btn ghost" data-go="home" style="flex:1">${I.home} Inicio</button>`, { back: 'aspect' });
@@ -683,7 +834,7 @@ html.modo-app, html.modo-app body { height: 100%; margin: 0; }
         <h2 class="scr">Bienvenidos</h2>
         <p class="steptext">Esta guía les ayudará a hacer la diálisis en casa, paso a paso.</p>
         <p class="lead">Configúrenla junto con la enfermera antes de salir del hospital. Toma unos 2 minutos.</p>
-        <button class="listen" data-say="Bienvenidos. Esta guía les ayudará a hacer la diálisis en casa, paso a paso. Configúrenla junto con la enfermera antes de salir del hospital.">${I.speaker}Escuchar</button>
+        ${sayBtn('Bienvenidos. Esta guía les ayudará a hacer la diálisis en casa, paso a paso. Configúrenla junto con la enfermera antes de salir del hospital.')}
       `, `<div class="stack">
         <button class="btn" data-act="start">Empezar ${I.next}</button>
         <button class="btn ghost wide" data-go="obScan">${I.qr} Tengo un código del hospital</button>
@@ -833,10 +984,14 @@ html.modo-app, html.modo-app body { height: 100%; margin: 0; }
     const b = app.querySelector('.body');
     if (b) b.scrollTop = S._scrollTop ? 0 : keep;
     S._scrollTop = false;
+    saveProgress();
   }
   function go(screen) {
     stopSpeak();
     clearTimeout(S.scanT);
+    S.modal = null;
+    if (screen === 'home' || screen === 'finished') S.session = null;
+    if (screen === 'prep' && !S.session) S.session = { id: Date.now() };
     if (screen === 'home') S.practice = false;
     if (screen !== 'settings') S.confirmReset = false;
     if (screen === 'prep' && S.screen === 'home') S.checks = PREP.map(() => false);
@@ -867,6 +1022,10 @@ html.modo-app, html.modo-app body { height: 100%; margin: 0; }
         case 'start': S.draft = newDraft(); S.fromQR = false; S.fromSummary = false; go('obPatient'); break;
         case 'edit': S.draft = clone(CFG); S.fromQR = false; S.fromSummary = true; go('obSummary'); break;
         case 'practice': S.practice = true; S.checks = PREP.map(() => false); go('prep'); break;
+        case 'home-ask': S.modal = { type: 'home' }; render(); break;
+        case 'home-yes': resetTimer(0); go('home'); break;
+        case 'modal-close': S.modal = null; render(); break;
+        case 'video': stopSpeak(); S.modal = { type: 'video' }; render(); break;
         case 'reset': S.confirmReset = true; render(); break;
         case 'reset-no': S.confirmReset = false; render(); break;
         case 'reset-yes':
@@ -883,14 +1042,16 @@ html.modo-app, html.modo-app body { height: 100%; margin: 0; }
       render(); return;
     }
     if (t.dataset.edit) { S.fromSummary = true; go(t.dataset.edit); return; }
-    if (t.dataset.say) { speak(t.dataset.say, t); return; }
+    if (t.dataset.say) { sayToggle(t.dataset.say); return; }
+    if (t.dataset.saystop) { sayStop(); return; }
     if (t.dataset.check) { const i = +t.dataset.check; S.checks[i] = !S.checks[i]; render(); return; }
     if (t.dataset.open) { S.alarmOpen = S.alarmOpen === t.dataset.open ? null : t.dataset.open; render(); return; }
     if (t.dataset.rem) { const r = CFG.reminders[+t.dataset.rem]; r.on = !r.on; saveCfg(); render(); return; }
     if (t.dataset.aspect) {
       S.aspect = t.dataset.aspect;
+      upsertLog({ aspect: S.aspect });
       if (S.aspect === 'claro') go('register');
-      else { if (!S.practice) { LOG.push({ t: Date.now(), vol: 0, aspect: S.aspect }); saveLog(); } go('alert'); beep(); }
+      else { go('alert'); beep(); }
       return;
     }
     if (t.dataset.adj) {
@@ -912,17 +1073,16 @@ html.modo-app, html.modo-app body { height: 100%; margin: 0; }
         if (S.step > 0) { S.step--; resetTimer(STEPS[S.step].timer); S._scrollTop = true; render(); } else go('prep');
         break;
       case 't-toggle':
-        if (S.running) { clearInterval(S.timer); S.timer = null; S.running = false; }
-        else { S.running = true; S.timer = setInterval(tick, 1000); try { actx = actx || new (window.AudioContext || window.webkitAudioContext)(); } catch (err) {} }
+        if (S.running) pauseTimer(); else startTimer();
         render(); break;
       case 't-skip':
-        S.remaining = Math.min(S.remaining, 3);
-        if (!S.running) { S.running = true; S.timer = setInterval(tick, 1000); }
-        render(); break;
+        if (S.running) S.endAt = Math.min(S.endAt, Date.now() + 3000);
+        else { S.remaining = Math.min(S.remaining, 3); startTimer(); }
+        tick(); render(); break;
       case 't-reset': resetTimer(STEPS[S.step].timer); render(); break;
       case 'save':
         readReg();
-        if (!S.practice) { const e = { t: Date.now(), vol: S.reg.vol, aspect: 'claro' }; if (S.reg.peso !== '') e.peso = S.reg.peso; LOG.push(e); saveLog(); }
+        { const f = { vol: S.reg.vol, aspect: 'claro' }; if (S.reg.peso !== '') f.peso = S.reg.peso; upsertLog(f); }
         go('finished'); break;
       case 'ob-next': {
         const err = readOb(); if (err) { toast(err); break; }
@@ -955,7 +1115,18 @@ html.modo-app, html.modo-app body { height: 100%; margin: 0; }
   // Iconos de las notas
   document.querySelectorAll('.notes .dot').forEach(d => { d.innerHTML = I[d.dataset.i] || ''; });
   try { speechSynthesis.getVoices(); } catch (e) {}
+
+  // Al volver a la app: se apaga la alarma y, si el reloj terminó mientras tanto, se da el aviso hablado.
+  document.addEventListener('visibilitychange', () => {
+    if (document.hidden) return;
+    stopAlarm();
+    if (S.running) { tick(); keepAwake(); }
+    if (S.done && !S.announced) { announceDone(); if (S.screen === 'step' && !S.modal) render(); }
+  });
+
+  const resumed = restoreProgress();
   render();
+  if (resumed) toast(S.practice ? 'Continuamos la práctica donde la dejó.' : 'Continuamos el recambio donde lo dejó.');
 })();
 </script>
 

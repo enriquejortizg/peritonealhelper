@@ -4,7 +4,7 @@ App para que los familiares de pacientes de un servicio de diálisis hospitalari
 
 ## Restricciones que guían todo
 - **Costo cero.** Sin servidor ni servicios de pago. Por eso es una app web instalable (PWA) publicada en GitHub Pages.
-- **Funciona sin internet**, y los datos (configuración y registro) se quedan solo en el teléfono, en `localStorage` (`dp-config`, `dp-log`).
+- **Funciona sin internet**, y los datos (configuración, registro y recambio en curso) se quedan solo en el teléfono, en `localStorage` (`dp-config`, `dp-log`, `dp-progress`).
 - **Usuarios nerviosos o con poca práctica leyendo.** Una cosa por pantalla, dibujo grande, frases cortas, botones grandes, botón Escuchar en cada paso y letra grande (botón Aa). Los textos van en español, tratando de "usted".
 
 ## Estado
@@ -24,6 +24,11 @@ App para que los familiares de pacientes de un servicio de diálisis hospitalari
 - Configuración inicial con la enfermera: nombre del paciente, tipo de diálisis (solo la manual; la de máquina aparece como "Próximamente"), recambios al día y horarios, tamaño de la bolsa, unidad y teléfono. Termina con un resumen y un recambio de práctica que no se anota.
 - Código QR del hospital **simulado**: no usa la cámara y carga `EXAMPLE`.
 - Recambio guiado de 10 pasos con temporizadores, aspecto del líquido, alarmas, registro, recordatorios y ajustes (incluye "Empezar de nuevo" para repetir la demostración).
+- Escuchar se lee frase por frase, con Pausar (continúa desde la frase en curso) y Detener (la próxima vez empieza desde el principio). La pausa propia del navegador no es confiable en Android.
+- Botón "Ver video" en cada paso: se activa cuando el paso tiene `video` en `STEPS`; si no, aparece deshabilitado.
+- El temporizador cuenta contra la hora de término y mantiene la pantalla encendida. Si termina con la app en segundo plano, suena una alarma fuerte durante un minuto y llega una notificación; el aviso hablado se da al volver a la app.
+- Cada recambio es **una sola** entrada del registro (`S.session.id`): cambiar el aspecto del líquido actualiza esa entrada.
+- El recambio en curso se guarda; al reabrir la app continúa en el mismo paso. Durante el recambio, Inicio pide confirmación porque se pierde el progreso.
 
 ## Forma de trabajar
 1. Trabajar en una rama nueva y editar `docs/index.html`.

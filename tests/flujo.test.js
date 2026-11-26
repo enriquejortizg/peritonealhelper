@@ -23,13 +23,23 @@ const app = {
   addEventListener(t, f) { handler = f; }
 };
 global.document = {
+  hidden: false, addEventListener() {},
   getElementById: () => app, querySelectorAll: () => [],
   querySelector: s => (s === '.toast' ? null : { appendChild() {}, remove() {} }),
   documentElement: { style: { setProperty() {} } },
   createElement: () => ({ remove() {}, set textContent(v) { toastMsg = v; } })
 };
 global.window = global; global.navigator = {};
-eval(js);
+// Voz simulada: guarda lo que se pide leer; cancel() avisa "interrupted" como el navegador.
+global.SpeechSynthesisUtterance = class { constructor(t) { this.text = t; } };
+global.speechSynthesis = {
+  spoken: [], cur: null, getVoices: () => [],
+  speak(u) { this.spoken.push(u); this.cur = u; },
+  cancel() { const u = this.cur; this.cur = null; if (u && u.onerror) u.onerror({ error: 'interrupted' }); }
+};
+// Simula abrir la app (o volver a abrirla) con lo que haya guardado en el teléfono.
+const boot = () => eval(js);
+boot();
 
 const click = (o) => handler({ target: { id: o.id || '', dataset: o.data || {}, closest() { return this; }, classList: { add() {}, remove() {} } } });
 let fails = 0;
@@ -38,6 +48,22 @@ const has = s => appHTML.includes(s);
 
 (async () => {
   ok(has('Bienvenidos'), 'Primera vez: pantalla de bienvenida');
+
+  // Escuchar: pausar, continuar y detener
+  const ss = speechSynthesis, sayText = () => appHTML.match(/data-say="([^"]*)"/)[1];
+  click({ data: { say: sayText() } });
+  ok(has('Pausar') && has('Detener') && ss.cur.text === 'Bienvenidos.', 'Escuchar empieza a leer y muestra Pausar y Detener');
+  ss.cur.onend();
+  ok(ss.cur.text.startsWith('Esta guía'), 'Lee la frase siguiente');
+  click({ data: { say: sayText() } });
+  ok(has('Continuar') && ss.cur === null, 'Pausar calla la voz y ofrece Continuar');
+  click({ data: { say: sayText() } });
+  ok(ss.cur && ss.cur.text.startsWith('Esta guía'), 'Continuar sigue desde la frase en curso');
+  click({ data: { saystop: '1' } });
+  ok(has('Escuchar') && !has('Detener') && ss.cur === null, 'Detener calla la voz y vuelve a Escuchar');
+  click({ data: { say: sayText() } });
+  ok(ss.cur.text === 'Bienvenidos.', 'Después de Detener empieza desde el principio');
+  click({ data: { saystop: '1' } });
   click({ data: { act: 'start' } });
   ok(has('¿Cómo se llama el paciente?'), 'Empezar → nombre del paciente');
   click({ id: 'ob-next' });
@@ -81,14 +107,40 @@ const has = s => appHTML.includes(s);
   click({ data: { go: 'prep' } });
   for (let i = 0; i < 5; i++) click({ data: { check: String(i) } });
   click({ data: { go: 'step' } });
+  ok(has('disabled title="Todavía no hay video'), 'Paso sin video: botón Ver video deshabilitado');
   for (let i = 0; i < 10; i++) click({ id: 'next' });
+  // Se prueban varios colores antes del correcto: debe quedar una sola entrada, con la última opción.
+  click({ data: { aspect: 'turbio' } });
+  click({ data: { go: 'aspect' } });
+  click({ data: { aspect: 'sangre' } });
+  click({ data: { go: 'aspect' } });
   click({ data: { aspect: 'claro' } });
   click({ id: 'save' });
-  ok(has('¡Recambio terminado!') && JSON.parse(store['dp-log']).length === 1, 'Recambio real queda anotado');
+  const log1 = JSON.parse(store['dp-log']);
+  ok(has('¡Recambio terminado!') && log1.length === 1 && log1[0].aspect === 'claro' && log1[0].vol === 2500, 'Probar varios colores deja una sola entrada con la última opción');
   click({ data: { go: 'home' } });
   ok(has('<b>1 de 3</b>'), 'Inicio: 1 de 3 recambios hoy');
   click({ data: { go: 'alarms' } });
   ok(has('33 1234 5678') && !has('Número de ejemplo'), 'Alarmas muestran el teléfono configurado');
+
+  // Recambio interrumpido: se retoma al reabrir, e Inicio pide confirmación
+  click({ data: { go: 'home' } });
+  click({ data: { go: 'prep' } });
+  for (let i = 0; i < 5; i++) click({ data: { check: String(i) } });
+  click({ data: { go: 'step' } });
+  for (let i = 0; i < 5; i++) click({ id: 'next' });
+  ok(has('Drene el líquido') && has('data-act="home-ask"'), 'Durante el recambio, Inicio pide confirmación');
+  click({ id: 't-toggle' });
+  ok(JSON.parse(store['dp-progress']).timer.running, 'Se guarda el progreso con el reloj corriendo');
+  boot();
+  ok(has('Drene el líquido') && has('id="t-toggle">Pausar') && toastMsg.includes('Continuamos'), 'Al reabrir la app sigue en el mismo paso con el reloj corriendo');
+  click({ data: { act: 'home-ask' } });
+  ok(has('¿Volver al inicio?') && has('se perderá el progreso'), 'Inicio muestra la confirmación');
+  click({ data: { act: 'modal-close' } });
+  ok(!has('¿Volver al inicio?') && has('Drene el líquido'), '"No, seguir" vuelve al mismo paso');
+  click({ data: { act: 'home-ask' } });
+  click({ data: { act: 'home-yes' } });
+  ok(has('Hola, familia') && !store['dp-progress'] && JSON.parse(store['dp-log']).length === 1, '"Sí, ir al inicio" descarta el progreso sin anotar nada');
 
   click({ data: { go: 'settings' } });
   click({ data: { act: 'edit' } });
