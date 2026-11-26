@@ -1,6 +1,6 @@
-// Service worker de Mi Diálisis en Casa: guarda la app en el teléfono para que abra sin internet.
+// Service worker de Diálisis Contigo: guarda la app en el teléfono para que abra sin internet.
 // Cada vez que cambie el contenido de la app, suba el número de versión para que los teléfonos descarguen la nueva.
-const VERSION = 'v1';
+const VERSION = 'v2';
 const APP_CACHE = 'app-' + VERSION;
 const FONT_CACHE = 'fuentes';
 

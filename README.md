@@ -1,4 +1,4 @@
-# Mi Diálisis en Casa
+# Diálisis Contigo
 
 Guía paso a paso para que los familiares de pacientes hagan la diálisis peritoneal en casa. Es una app web instalable: se publica gratis en GitHub Pages, los familiares la abren en Chrome de Android, la instalan con un toque y después funciona sin internet.
 
@@ -12,9 +12,26 @@ Guía paso a paso para que los familiares de pacientes hagan la diálisis perito
 | `docs/manifest.json` | Nombre, colores e íconos. Hace que Chrome ofrezca "Instalar app". |
 | `docs/sw.js` | Guarda la app en el teléfono para que abra sin internet. |
 | `docs/icons/` | Íconos para la pantalla de inicio. |
-| `mi-dialisis-en-casa.html` | Versión de presentación: la app dentro de un teléfono, con notas que explican cada función. |
+| `dialisis-contigo.html` | Versión de presentación: la app dentro de un teléfono, con notas que explican cada función. Se genera desde `docs/index.html`; no la edite a mano. |
+| `scripts/generar-presentacion.mjs` | Vuelve a generar la versión de presentación. |
 
 La app está en `docs/` porque GitHub Pages puede publicar esa carpeta directamente.
+
+## Primera vez: configuración de una familia nueva
+
+La primera vez que se abre, la app pide configurarla junto con la enfermera, una pregunta por pantalla:
+
+1. Nombre del paciente y quién le hará la diálisis.
+2. Tipo de diálisis (en el prototipo solo está la manual; la de máquina aparece como "Próximamente").
+3. Recambios al día (3, 4 o 5) y sus horarios.
+4. Tamaño de la bolsa (1,5 L, 2 L o 2,5 L). Se usa para proponer el volumen al anotar.
+5. Nombre y teléfono de la unidad, que aparecen en las señales de alarma.
+
+Al final se revisa un resumen y se puede **practicar un recambio** que no se anota en el registro.
+
+También está **Tengo un código del hospital**: en la versión real la enfermera mostraría un código QR con todo configurado. En el prototipo no usa la cámara: simula la lectura y carga datos de ejemplo.
+
+Todo se guarda solo en el teléfono. Para repetir la demostración desde cero: botón de ajustes en la pantalla de inicio → **Empezar de nuevo**.
 
 ## Publicar en GitHub Pages (una sola vez)
 
@@ -44,13 +61,16 @@ Todo el contenido está al principio del `<script>` de `docs/index.html`:
 - `PREP`: la lista de "Antes de empezar".
 - `STEPS`: cada paso, con `title` (título), `text` (texto), `tip` (aviso, opcional) y `timer` (segundos, opcional).
 - `ALARMS`: las señales de alarma y qué hacer en cada una.
-- `PHONE` y `UNIT`: el teléfono y el nombre de la unidad.
-- `reminders`: los horarios de los recambios.
+- `APP_NAME`: el nombre de la app en pantalla (cámbielo también en `<title>` y en `docs/manifest.json`).
+- `DEFAULTS`: el teléfono y el nombre de la unidad que se proponen en la configuración.
+- `SCHEDULES`: los horarios que se proponen según el número de recambios.
+- `EXAMPLE`: los datos que carga el código QR simulado.
 
 Después de cambiar algo:
 
-1. Abra `docs/sw.js` y suba la versión: `const VERSION = 'v1';` pasa a `'v2'`, y así cada vez.
-2. Haga commit y suba los cambios a `main` (`git push`).
+1. Abra `docs/sw.js` y suba la versión (`const VERSION = 'v2';` pasa a `'v3'`, y así cada vez).
+2. Vuelva a generar la versión de presentación: `node scripts/generar-presentacion.mjs`.
+3. Haga commit y suba los cambios a `main` (`git push`).
 3. Los teléfonos reciben la versión nueva la próxima vez que abran la app con internet.
 
 ## Lo que esta versión todavía no hace

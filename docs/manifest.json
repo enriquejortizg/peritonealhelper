@@ -1,6 +1,6 @@
 {
-  "name": "Mi Diálisis en Casa",
-  "short_name": "Mi Diálisis",
+  "name": "Diálisis Contigo",
+  "short_name": "Diálisis Contigo",
   "description": "Guía paso a paso para la diálisis peritoneal en casa.",
   "lang": "es",
   "start_url": "./",
