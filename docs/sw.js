@@ -1,6 +1,6 @@
 // Service worker de Diálisis Contigo: guarda la app en el teléfono para que abra sin internet.
-// Cada vez que cambie el contenido de la app, suba el número de versión para que los teléfonos descarguen la nueva.
-const VERSION = 'v3';
+// Debe ser igual a APP_VERSION en index.html (la prueba lo comprueba). Al cambiarla, los teléfonos descargan la app nueva.
+const VERSION = '0.0.3.1';
 const APP_CACHE = 'app-' + VERSION;
 const FONT_CACHE = 'fuentes';
 

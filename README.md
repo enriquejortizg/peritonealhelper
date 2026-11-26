@@ -68,7 +68,7 @@ Todo el contenido está al principio del `<script>` de `docs/index.html`:
 
 Después de cambiar algo:
 
-1. Abra `docs/sw.js` y suba la versión (`const VERSION = 'v2';` pasa a `'v3'`, y así cada vez).
+1. Cambie la versión, con el mismo valor, en `APP_VERSION` (`docs/index.html`) y en `VERSION` (`docs/sw.js`). Formato PRODUCCIÓN.GRANDE.RELEASE.MENOR: el RELEASE sube con cada cambio que llega a `main` (0.0.3.1 → 0.0.4.1), y el MENOR sube al corregir un release que salió mal (0.0.3.1 → 0.0.3.2).
 2. Vuelva a generar la versión de presentación: `node scripts/generar-presentacion.mjs`.
 3. Haga commit y suba los cambios a `main` (`git push`).
 3. Los teléfonos reciben la versión nueva la próxima vez que abran la app con internet.
