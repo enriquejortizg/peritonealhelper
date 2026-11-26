@@ -1,4 +1,4 @@
-<title>Mi Diálisis en Casa</title>
+<title>Diálisis Contigo</title>
 <meta name="claude:viewport-fit-sides" content="cover">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -210,22 +210,66 @@ button:focus-visible, a:focus-visible, input:focus-visible { outline: 3px solid 
 }
 @media (prefers-reduced-motion: reduce) { * { transition: none !important; } }
 </style>
+<style>
+/* Configuración inicial y ajustes */
+.stack { flex: 1; display: grid; gap: 10px; }
+.btn.ghost.wide { flex: none; width: 100%; }
+.pic.logo svg { width: 30%; }
+.proto.practice { background: var(--accent-soft); color: var(--accent); }
+.field input.txt { font-size: 1.1em; font-weight: 400; }
+.field .opt { color: var(--muted); font-weight: 400; }
+.choice svg { color: var(--accent); }
+.choice.sel { border-color: var(--accent); background: var(--accent-soft); }
+.choice:disabled { opacity: .55; cursor: not-allowed; }
+.seg { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; }
+.seg button { min-height: 64px; border-radius: 16px; border: 2px solid var(--line); background: var(--surface); color: var(--ink); font: 700 1.5em var(--font-display); cursor: pointer; }
+.seg button[aria-pressed="true"] { background: var(--accent); border-color: var(--accent); color: var(--on-accent); }
+.times { display: grid; gap: 8px; }
+.time { display: flex; justify-content: space-between; align-items: center; gap: 12px; padding: 10px 14px; border: 1px solid var(--line); border-radius: 14px; font-weight: 700; }
+.time input { font: 700 1.25em var(--font-display); border: 2px solid var(--line); border-radius: 12px; padding: 6px 10px; background: var(--surface); color: var(--ink); min-height: 48px; }
+.summary { display: grid; gap: 8px; }
+.srow { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 12px; align-items: center; padding: 12px 14px; border: 1px solid var(--line); border-radius: 14px; }
+.srow small { display: block; color: var(--muted); font-size: .82em; }
+.srow b { font-size: 1.02em; font-variant-numeric: tabular-nums; overflow-wrap: anywhere; }
+.srow .lead { font-size: .88em; font-weight: 400; }
+.link { border: 0; background: none; color: var(--accent); font: 700 .95em var(--font-body); cursor: pointer; min-height: 44px; padding: 0 6px; text-decoration: underline; }
+.danger { display: grid; gap: 8px; border: 2px solid var(--alarm-soft); border-radius: 16px; padding: 14px; }
+.danger b { color: var(--alarm); }
+.danger > span { color: var(--muted); font-size: .92em; }
+.danger .row { display: flex; gap: 8px; }
+.scan { position: relative; width: 100%; max-width: 260px; aspect-ratio: 1; margin: 8px auto; border-radius: 20px; border: 3px solid var(--accent); background: var(--surface-2); padding: 26px; overflow: hidden; color: var(--ink); }
+.scan svg { width: 100%; height: 100%; display: block; }
+.scan .beam { position: absolute; left: 0; right: 0; top: 10%; height: 3px; background: var(--accent); box-shadow: 0 0 12px var(--accent); animation: beam 1.4s ease-in-out infinite alternate; }
+@keyframes beam { to { top: 88%; } }
+@media (prefers-reduced-motion: reduce) { .scan .beam { animation: none; top: 50%; } }
+
+/* Modo app: sin marco de teléfono ni notas, a pantalla completa */
+html.modo-app, html.modo-app body { height: 100%; margin: 0; }
+.modo-app .notes { display: none; }
+.modo-app .layout { display: block; max-width: none; padding: 0; height: 100%; }
+.modo-app .device { position: relative; top: 0; width: 100%; max-width: none; height: 100%; margin: 0; border: 0; border-radius: 0; box-shadow: none; }
+@media (min-width: 600px) { .modo-app .device { max-width: 480px; margin: 0 auto; border-left: 1px solid var(--line); border-right: 1px solid var(--line); } }
+.modo-app .bar { padding-top: max(14px, env(safe-area-inset-top, 0px)); padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px)); }
+.modo-app .foot { padding-bottom: max(16px, env(safe-area-inset-bottom, 0px)); }
+.modo-app .toast { bottom: calc(96px + env(safe-area-inset-bottom, 0px)); }
+</style>
 
 <div class="layout">
   <section class="notes" aria-label="Sobre este prototipo">
     <div class="eyebrow">Prototipo · Servicio de Diálisis</div>
     <h1>Una guía de bolsillo para la diálisis peritoneal en casa</h1>
-    <p>Así podría verse la app para los familiares. Funciona sin internet, no necesita servidor y nada sale del teléfono. Pruébala: toca <b>Hacer un recambio</b> y sigue los pasos.</p>
+    <p>Así podría verse la app para los familiares. Funciona sin internet, no necesita servidor y nada sale del teléfono. Empieza como lo haría una familia nueva: configurando la guía con la enfermera.</p>
     <ul class="feat">
+      <li><span class="dot" data-i="gear"></span><div><b>Configuración inicial</b><span>Nombre del paciente, recambios al día y sus horarios, tamaño de la bolsa y teléfono del hospital. Una pregunta por pantalla, hecha junto con la enfermera.</span></div></li>
+      <li><span class="dot" data-i="qr"></span><div><b>Código del hospital</b><span>La enfermera podría mostrar un código QR con todo configurado. En el prototipo se simula y carga datos de ejemplo.</span></div></li>
+      <li><span class="dot" data-i="play"></span><div><b>Recambio de práctica</b><span>Al terminar la configuración se puede practicar un recambio completo sin que se anote en el registro.</span></div></li>
       <li><span class="dot" data-i="steps"></span><div><b>Un paso por pantalla</b><span>Dibujo grande, frase corta y botón grande de Siguiente. Hecho para personas nerviosas o con poca práctica leyendo.</span></div></li>
       <li><span class="dot" data-i="speaker"></span><div><b>Cada paso se escucha</b><span>El botón Escuchar lee el paso en voz alta. En la versión real se usarían audios grabados por las enfermeras del servicio.</span></div></li>
       <li><span class="dot" data-i="clock"></span><div><b>Temporizadores</b><span>Lavado de manos, drenaje e infusión llevan su propio reloj con aviso al terminar. Hay un botón para adelantarlo en la demostración.</span></div></li>
-      <li><span class="dot" data-i="alert"></span><div><b>Señales de alarma</b><span>Si el líquido sale turbio o con sangre, la app lo indica y muestra el teléfono del hospital.</span></div></li>
-      <li><span class="dot" data-i="list"></span><div><b>Registro de recambios</b><span>Hora, volumen drenado y aspecto del líquido, guardados en el teléfono para enseñarlos en la consulta.</span></div></li>
-      <li><span class="dot" data-i="bell"></span><div><b>Recordatorios</b><span>Horarios de cada recambio. En la versión Android sonarían como alarma.</span></div></li>
-      <li><span class="dot" data-i="text"></span><div><b>Letra grande</b><span>El botón Aa agranda todo el texto.</span></div></li>
+      <li><span class="dot" data-i="alert"></span><div><b>Señales de alarma</b><span>Si el líquido sale turbio o con sangre, la app lo indica y muestra el teléfono que se configuró.</span></div></li>
+      <li><span class="dot" data-i="list"></span><div><b>Registro y recordatorios</b><span>Hora, volumen drenado y aspecto del líquido, guardados en el teléfono. Los horarios salen de la configuración.</span></div></li>
     </ul>
-    <div class="disclaimer"><b>Contenido de ejemplo.</b> Los pasos, tiempos y teléfonos de este prototipo son ilustrativos y no son una guía médica. La versión real usaría el procedimiento aprobado por el equipo de nefrología del hospital.</div>
+    <div class="disclaimer"><b>Contenido de ejemplo.</b> Los pasos, tiempos y teléfonos de este prototipo son ilustrativos y no son una guía médica. Para repetir la instalación desde cero: botón de ajustes de la pantalla de inicio → <b>Empezar de nuevo</b>.</div>
   </section>
 
   <div class="device"><div class="device-inner"><div id="app" aria-live="polite"></div></div></div>
@@ -251,7 +295,10 @@ button:focus-visible, a:focus-visible, input:focus-visible { outline: 3px solid 
     copy: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><rect x="8" y="8" width="12" height="12" rx="2"/><path d="M16 8V5.5A1.5 1.5 0 0 0 14.5 4h-9A1.5 1.5 0 0 0 4 5.5v9A1.5 1.5 0 0 0 5.5 16H8"/></svg>',
     chev: '<svg class="chev" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="M6 9l6 6 6-6"/></svg>',
     play: '<svg viewBox="0 0 24 24" fill="currentColor"><path d="M7 4.5v15l12-7.5z"/></svg>',
-    bag: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M7 4h10v12a5 5 0 0 1-10 0z"/><path d="M12 21v2M10 2h4"/><path d="M7 11h10"/></svg>'
+    bag: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M7 4h10v12a5 5 0 0 1-10 0z"/><path d="M12 21v2M10 2h4"/><path d="M7 11h10"/></svg>',
+    machine: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="7" width="18" height="12" rx="2"/><rect x="6" y="10" width="7" height="4" rx="1"/><path d="M16 11h2M16 14h2M8 4h8"/></svg>',
+    qr: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><path d="M14 14h3v3M21 14v.01M14 21h3M20 18v3"/></svg>',
+    gear: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.7 1.7 0 0 0 .3 1.8l.1.1a2 2 0 1 1-2.8 2.8l-.1-.1a1.7 1.7 0 0 0-1.8-.3 1.7 1.7 0 0 0-1 1.5V21a2 2 0 1 1-4 0v-.1a1.7 1.7 0 0 0-1.1-1.5 1.7 1.7 0 0 0-1.8.3l-.1.1a2 2 0 1 1-2.8-2.8l.1-.1a1.7 1.7 0 0 0 .3-1.8 1.7 1.7 0 0 0-1.5-1H3a2 2 0 1 1 0-4h.1a1.7 1.7 0 0 0 1.5-1.1 1.7 1.7 0 0 0-.3-1.8l-.1-.1a2 2 0 1 1 2.8-2.8l.1.1a1.7 1.7 0 0 0 1.8.3H9a1.7 1.7 0 0 0 1-1.5V3a2 2 0 1 1 4 0v.1a1.7 1.7 0 0 0 1 1.5 1.7 1.7 0 0 0 1.8-.3l.1-.1a2 2 0 1 1 2.8 2.8l-.1.1a1.7 1.7 0 0 0-.3 1.8V9a1.7 1.7 0 0 0 1.5 1H21a2 2 0 1 1 0 4h-.1a1.7 1.7 0 0 0-1.5 1z"/></svg>'
   };
 
   // Pictogramas grandes de cada paso (viewBox 0 0 160 120)
@@ -331,23 +378,42 @@ button:focus-visible, a:focus-visible, input:focus-visible { outline: 3px solid 
     { key: 'dolor', title: 'Dolor fuerte de panza', icon: '<svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><circle cx="12" cy="12" r="8"/><path d="M8.5 9.5l2 1M15.5 9.5l-2 1M9 16c1.8-1.5 4.2-1.5 6 0"/></svg>', what: 'Sobre todo si viene con líquido turbio.', todo: 'Llame al hospital. No espere al día siguiente.' },
     { key: 'orificio', title: 'Orificio rojo o con pus', icon: '<svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><circle cx="12" cy="12" r="3"/><circle cx="12" cy="12" r="7" stroke-dasharray="2 3"/><path d="M12 15v6"/></svg>', what: 'La piel alrededor del catéter está roja, hinchada, duele o sale pus.', todo: 'Mantenga limpio el orificio y llame al hospital.' }
   ];
-  const PHONE = '55 0000 0000';
-  const UNIT = 'Unidad de Diálisis Peritoneal';
+  const APP_NAME = 'Diálisis Contigo';
+
+  // ---------- Configuración de cada familia ----------
+  // Se llena en la configuración inicial y se guarda solo en este teléfono.
+  const DEFAULTS = { unit: 'Unidad de Diálisis Peritoneal', phone: '55 0000 0000' };
+  const SCHEDULES = {
+    3: ['07:00', '14:00', '21:00'],
+    4: ['07:00', '12:00', '17:00', '22:00'],
+    5: ['06:00', '10:00', '14:00', '18:00', '22:00']
+  };
+  // Lo que "traería" el código QR del hospital en la simulación.
+  const EXAMPLE = { patient: 'Rosa', carer: 'Su hija Ana', mode: 'manual', count: 4, times: SCHEDULES[4].slice(), bag: 2000, unit: DEFAULTS.unit, phone: DEFAULTS.phone };
+  const newDraft = () => ({ patient: '', carer: '', mode: 'manual', count: 4, times: SCHEDULES[4].slice(), bag: 2000, unit: DEFAULTS.unit, phone: DEFAULTS.phone });
+  const clone = o => JSON.parse(JSON.stringify(o));
+  const esc = s => String(s == null ? '' : s).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+  function loadCfg() { try { const c = JSON.parse(localStorage.getItem('dp-config') || 'null'); return c && c.patient ? c : null; } catch (e) { return null; } }
+  function saveCfg() { try { localStorage.setItem('dp-config', JSON.stringify(CFG)); } catch (e) {} }
+  let CFG = loadCfg();
+
+  function fakeQR() {
+    let seed = 11, cells = '';
+    const rnd = () => (seed = (seed * 16807) % 2147483647) / 2147483647;
+    const finder = (x, y) => `<rect x="${x}" y="${y}" width="7" height="7"/><rect x="${x + 1}" y="${y + 1}" width="5" height="5" style="fill:var(--surface-2)"/><rect x="${x + 2}" y="${y + 2}" width="3" height="3"/>`;
+    const inFinder = (x, y) => (x < 8 && y < 8) || (x > 12 && y < 8) || (x < 8 && y > 12);
+    for (let y = 0; y < 21; y++) for (let x = 0; x < 21; x++) if (!inFinder(x, y) && rnd() > .5) cells += `<rect x="${x}" y="${y}" width="1" height="1"/>`;
+    return `<svg viewBox="-1 -1 23 23" fill="currentColor" shape-rendering="crispEdges" aria-hidden="true">${finder(0, 0)}${finder(14, 0)}${finder(0, 14)}${cells}</svg>`;
+  }
 
   // ---------- Estado ----------
   const S = {
-    screen: 'home', step: 0, checks: PREP.map(() => false), large: false,
+    screen: CFG ? 'home' : 'welcome', step: 0, checks: PREP.map(() => false), large: false,
     timer: null, remaining: 0, total: 0, running: false, done: false,
-    reg: { vol: 2100, peso: 62.5 }, aspect: 'claro', alarmOpen: null,
-    reminders: [ { h: '07:00', on: true }, { h: '12:00', on: true }, { h: '17:00', on: true }, { h: '22:00', on: true } ]
+    reg: { vol: 2000, peso: '' }, aspect: 'claro', alarmOpen: null,
+    draft: newDraft(), fromSummary: false, fromQR: false, practice: false, confirmReset: false, scanT: null
   };
-  const SAMPLE = [
-    { t: Date.now() - 1000 * 60 * 60 * 26, vol: 2150, aspect: 'claro', ex: true },
-    { t: Date.now() - 1000 * 60 * 60 * 21, vol: 2050, aspect: 'claro', ex: true },
-    { t: Date.now() - 1000 * 60 * 60 * 16, vol: 2200, aspect: 'claro', ex: true },
-    { t: Date.now() - 1000 * 60 * 60 * 6, vol: 2100, aspect: 'claro', ex: true }
-  ];
-  function loadLog() { try { const v = JSON.parse(localStorage.getItem('dp-log') || 'null'); return Array.isArray(v) ? v : SAMPLE.slice(); } catch (e) { return SAMPLE.slice(); } }
+  function loadLog() { try { const v = JSON.parse(localStorage.getItem('dp-log') || 'null'); return Array.isArray(v) ? v : []; } catch (e) { return []; } }
   function saveLog() { try { localStorage.setItem('dp-log', JSON.stringify(LOG)); } catch (e) {} }
   let LOG = loadLog();
   try { S.large = localStorage.getItem('dp-large') === '1'; } catch (e) {}
@@ -414,20 +480,21 @@ button:focus-visible, a:focus-visible, input:focus-visible { outline: 3px solid 
     opts = opts || {};
     return `
       <div class="bar">
-        ${opts.back ? `<button class="iconbtn" data-go="${opts.back}" aria-label="Volver">${I.back}</button>` : `<div class="brand">${I.logo}<span>Mi Diálisis en Casa</span></div>`}
+        ${opts.back ? `<button class="iconbtn" data-go="${opts.back}" aria-label="Volver">${I.back}</button>` : `<div class="brand">${I.logo}<span>${APP_NAME}</span></div>`}
         ${opts.back ? `<div class="brand" style="flex:1;justify-content:center"><span>${title}</span></div>` : ''}
         <div style="display:flex;gap:6px">
-          ${opts.back ? `<button class="iconbtn" data-go="home" aria-label="Inicio">${I.home}</button>` : ''}
+          ${opts.back && CFG ? `<button class="iconbtn" data-go="home" aria-label="Inicio">${I.home}</button>` : ''}
+          ${opts.gear ? `<button class="iconbtn" data-go="settings" aria-label="Ajustes">${I.gear}</button>` : ''}
           <button class="iconbtn" id="aa" aria-pressed="${S.large}" aria-label="Letra grande">Aa</button>
         </div>
       </div>
-      <div class="proto">PROTOTIPO · CONTENIDO DE EJEMPLO</div>
+      ${S.practice ? '<div class="proto practice">MODO PRÁCTICA · NO SE ANOTA EN EL REGISTRO</div>' : '<div class="proto">PROTOTIPO · CONTENIDO DE EJEMPLO</div>'}
       <div class="body">${inner}</div>
       ${foot ? `<div class="foot">${foot}</div>` : ''}`;
   }
 
   function nextReminder() {
-    const on = S.reminders.filter(r => r.on); if (!on.length) return null;
+    const on = CFG.reminders.filter(r => r.on); if (!on.length) return null;
     const now = new Date(), mins = now.getHours() * 60 + now.getMinutes();
     let best = null;
     on.forEach(r => { const [h, m] = r.h.split(':').map(Number); let d = h * 60 + m - mins; if (d <= 0) d += 1440; if (!best || d < best.d) best = { h: r.h, d }; });
@@ -438,12 +505,12 @@ button:focus-visible, a:focus-visible, input:focus-visible { outline: 3px solid 
     home() {
       const nr = nextReminder();
       const today = LOG.filter(e => dayLabel(e.t) === 'Hoy').length;
-      const goal = S.reminders.filter(r => r.on).length || 4;
+      const goal = CFG.count;
       const inTxt = nr ? (nr.d >= 60 ? `en ${Math.floor(nr.d / 60)} h ${nr.d % 60} min` : `en ${nr.d} min`) : '';
       return shell('', `
         <div>
-          <h2 class="scr">Hola, familia de Rosa</h2>
-          <p class="lead">Diálisis manual · 4 recambios al día</p>
+          <h2 class="scr">Hola, familia de ${esc(CFG.patient)}</h2>
+          <p class="lead">Diálisis manual · ${CFG.count} recambios al día</p>
         </div>
         ${nr ? `<div class="next"><small>Próximo recambio</small><span class="t">${nr.h}</span><span class="sub">${inTxt}</span></div>` : ''}
         <div class="tiles">
@@ -454,7 +521,7 @@ button:focus-visible, a:focus-visible, input:focus-visible { outline: 3px solid 
           <button class="tile" data-go="call">${I.phone}<span>Llamar al hospital</span></button>
         </div>
         <div class="today"><span>Recambios de hoy: <b>${Math.min(today, goal)} de ${goal}</b></span><span class="pips">${Array.from({ length: goal }, (_, i) => `<i class="${i < today ? 'on' : ''}"></i>`).join('')}</span></div>
-      `);
+      `, '', { gear: true });
     },
 
     prep() {
@@ -523,7 +590,7 @@ button:focus-visible, a:focus-visible, input:focus-visible { outline: 3px solid 
         </div>
         <div class="field">
           <label for="peso">Peso del paciente (kg)</label>
-          <div class="stepper"><button data-adj="peso" data-d="-0.1" aria-label="Menos 0.1">−</button><input id="peso" inputmode="decimal" value="${S.reg.peso.toFixed(1)}"><button data-adj="peso" data-d="0.1" aria-label="Más 0.1">+</button></div>
+          <div class="stepper"><button data-adj="peso" data-d="-0.1" aria-label="Menos 0.1">−</button><input id="peso" inputmode="decimal" placeholder="—" value="${S.reg.peso === '' ? '' : Number(S.reg.peso).toFixed(1)}"><button data-adj="peso" data-d="0.1" aria-label="Más 0.1">+</button></div>
           <span class="hint">Opcional. Una vez al día, en ayunas.</span>
         </div>
       `, `<button class="btn" id="save">${I.check} Guardar y terminar</button>`, { back: 'aspect' });
@@ -531,6 +598,11 @@ button:focus-visible, a:focus-visible, input:focus-visible { outline: 3px solid 
 
     finished() {
       const nr = nextReminder();
+      if (S.practice) return shell('Práctica', `
+        <div class="pic" style="background:var(--ok-soft);color:var(--ok)"><svg viewBox="0 0 160 120" fill="none" stroke="currentColor" stroke-width="8" stroke-linecap="round" stroke-linejoin="round"><circle cx="80" cy="60" r="44"/><path d="M58 62l15 15 30-32"/></svg></div>
+        <h2 class="scr" style="text-align:center">¡Práctica terminada!</h2>
+        <p class="lead" style="text-align:center">No se anotó nada en el registro. En casa, usen <b>Hacer un recambio</b> en la pantalla de inicio.</p>
+      `, `<button class="btn" data-go="home">${I.home} Ir al inicio</button>`);
       return shell('Listo', `
         <div class="pic" style="background:var(--ok-soft);color:var(--ok)"><svg viewBox="0 0 160 120" fill="none" stroke="currentColor" stroke-width="8" stroke-linecap="round" stroke-linejoin="round"><circle cx="80" cy="60" r="44"/><path d="M58 62l15 15 30-32"/></svg></div>
         <h2 class="scr" style="text-align:center">¡Recambio terminado!</h2>
@@ -546,7 +618,7 @@ button:focus-visible, a:focus-visible, input:focus-visible { outline: 3px solid 
         <p class="steptext"><b>Qué hacer:</b> ${a.todo}</p>
         <button class="listen" data-say="Atención. ${a.title}. ${a.what} ${a.todo}">${I.speaker}Escuchar</button>
         ${callCard()}
-        <div class="note">El recambio quedó anotado como <b>${a.title.toLowerCase()}</b> en su registro, para que el equipo lo vea.</div>
+        <div class="note">${S.practice ? 'Esto es una práctica: no se anotó en el registro.' : `El recambio quedó anotado como <b>${a.title.toLowerCase()}</b> en su registro, para que el equipo lo vea.`}</div>
       `, `<button class="btn ghost" data-go="home" style="flex:1">${I.home} Inicio</button>`, { back: 'aspect' });
     },
 
@@ -576,6 +648,7 @@ button:focus-visible, a:focus-visible, input:focus-visible { outline: 3px solid 
       return shell('Mi registro', `
         <div><h2 class="scr">Mi registro</h2><p class="lead">Lleve el teléfono a su consulta para que el equipo lo revise.</p></div>
         <div class="sum"><div><small>Recambios hoy</small><b>${todays.length}</b></div><div><small>Drenado hoy</small><b>${tot.toLocaleString('es')} ml</b></div></div>
+        ${sorted.length ? '' : '<div class="note">Todavía no hay recambios anotados. Aparecerán aquí al terminar cada recambio.</div>'}
         <div class="log">
           ${sorted.map(e => `<div class="entry"><span class="hr">${hm(e.t)}</span><span><span class="d">${dayLabel(e.t)}</span><br>${e.aspect === 'claro' ? '<span class="chip ok">Claro</span>' : `<span class="chip bad">${e.aspect === 'turbio' ? 'Turbio' : 'Con sangre'}</span>`} ${e.ex ? '<span class="chip ex">Ejemplo</span>' : ''}</span><span class="vol">${e.vol ? e.vol.toLocaleString('es') + ' ml' : '—'}</span></div>`).join('')}
         </div>
@@ -584,20 +657,155 @@ button:focus-visible, a:focus-visible, input:focus-visible { outline: 3px solid 
 
     reminders() {
       return shell('Recordatorios', `
-        <div><h2 class="scr">Recordatorios</h2><p class="lead">Horarios que indicó el equipo de diálisis.</p></div>
-        ${S.reminders.map((r, i) => `<div class="rem"><span><span class="hr">${r.h}</span><br><span class="d">Recambio ${i + 1}</span></span><button class="sw" role="switch" aria-checked="${r.on}" aria-label="Recordatorio de las ${r.h}" data-rem="${i}"></button></div>`).join('')}
+        <div><h2 class="scr">Recordatorios</h2><p class="lead">Horarios que indicó el equipo de diálisis. Para cambiarlos, vaya a Ajustes en la pantalla de inicio.</p></div>
+        ${CFG.reminders.map((r, i) => `<div class="rem"><span><span class="hr">${r.h}</span><br><span class="d">Recambio ${i + 1}</span></span><button class="sw" role="switch" aria-checked="${r.on}" aria-label="Recordatorio de las ${r.h}" data-rem="${i}"></button></div>`).join('')}
         <div class="note">En este prototipo los recordatorios solo calculan el próximo recambio. En la app para Android sonarán como una alarma, aunque el teléfono no tenga internet.</div>
+      `, '', { back: 'home' });
+    },
+
+    // ----- Configuración inicial (familia nueva) -----
+    welcome() {
+      return shell('', `
+        <div class="pic logo">${I.logo}</div>
+        <h2 class="scr">Bienvenidos</h2>
+        <p class="steptext">Esta guía les ayudará a hacer la diálisis en casa, paso a paso.</p>
+        <p class="lead">Configúrenla junto con la enfermera antes de salir del hospital. Toma unos 2 minutos.</p>
+        <button class="listen" data-say="Bienvenidos. Esta guía les ayudará a hacer la diálisis en casa, paso a paso. Configúrenla junto con la enfermera antes de salir del hospital.">${I.speaker}Escuchar</button>
+      `, `<div class="stack">
+        <button class="btn" data-act="start">Empezar ${I.next}</button>
+        <button class="btn ghost wide" data-go="obScan">${I.qr} Tengo un código del hospital</button>
+      </div>`);
+    },
+
+    obScan() {
+      return shell('Código del hospital', `
+        <h2 class="scr">Escanee el código</h2>
+        <p class="lead">Apunte la cámara al código que le muestra la enfermera.</p>
+        <div class="scan">${fakeQR()}<i class="beam"></i></div>
+        <div class="note">Prototipo: no usa la cámara. En unos segundos se carga una configuración de ejemplo, como si se hubiera leído el código.</div>
+      `, '', { back: 'welcome' });
+    },
+
+    obPatient() {
+      const d = S.draft;
+      return obShell('obPatient', '¿Cómo se llama el paciente?', `
+        <div class="field"><label for="ob-patient">Nombre o como le dicen</label><input id="ob-patient" class="txt" autocomplete="off" value="${esc(d.patient)}" placeholder="Por ejemplo: Don José"></div>
+        <div class="field"><label for="ob-carer">¿Quién le hará la diálisis? <span class="opt">(opcional)</span></label><input id="ob-carer" class="txt" autocomplete="off" value="${esc(d.carer)}" placeholder="Por ejemplo: su hija Ana"></div>
+        <p class="lead">Estos datos se quedan solo en este teléfono.</p>`);
+    },
+
+    obMode() {
+      const d = S.draft;
+      return obShell('obMode', '¿Qué tipo de diálisis le indicaron?', `
+        <div class="choices">
+          <button class="choice ${d.mode === 'manual' ? 'sel' : ''}" data-pick="mode:manual" aria-pressed="${d.mode === 'manual'}">${I.bag}<span><b>Manual, con bolsas</b><span>Varios recambios durante el día</span></span></button>
+          <button class="choice" disabled>${I.machine}<span><b>Con máquina por la noche</b><span class="chip ex">Próximamente</span></span></button>
+        </div>`);
+    },
+
+    obTimes() {
+      const d = S.draft;
+      return obShell('obTimes', '¿Cuántos recambios al día?', `
+        <div class="seg" role="group" aria-label="Recambios al día">${[3, 4, 5].map(n => `<button data-pick="count:${n}" aria-pressed="${d.count === n}">${n}</button>`).join('')}</div>
+        <p class="lead">Ajuste los horarios que indicó el médico.</p>
+        <div class="times">${d.times.map((t, i) => `<label class="time" for="ob-t${i}"><span>Recambio ${i + 1}</span><input type="time" id="ob-t${i}" value="${t}"></label>`).join('')}</div>`);
+    },
+
+    obBag() {
+      const d = S.draft;
+      return obShell('obBag', '¿De qué tamaño es la bolsa?', `
+        <div class="pic">${P.inspect}</div>
+        <p class="lead">Viene escrito en la bolsa, en litros.</p>
+        <div class="seg" role="group" aria-label="Tamaño de la bolsa">${[1500, 2000, 2500].map(v => `<button data-pick="bag:${v}" aria-pressed="${d.bag === v}">${(v / 1000).toLocaleString('es')} L</button>`).join('')}</div>`);
+    },
+
+    obUnit() {
+      const d = S.draft;
+      return obShell('obUnit', '¿A dónde llamar si hay un problema?', `
+        <div class="field"><label for="ob-unit">Nombre de la unidad</label><input id="ob-unit" class="txt" autocomplete="off" value="${esc(d.unit)}"></div>
+        <div class="field"><label for="ob-phone">Teléfono</label><input id="ob-phone" inputmode="tel" autocomplete="off" value="${esc(d.phone)}"></div>
+        <div class="note">La enfermera revisa que el número sea el correcto. Aparecerá en las señales de alarma.</div>`, 'Revisar');
+    },
+
+    obSummary() {
+      const d = S.draft, editing = !!CFG;
+      const row = (k, label, val) => `<div class="srow"><span><small>${label}</small><b>${val}</b></span><button class="link" data-edit="${k}">Cambiar</button></div>`;
+      return shell(editing ? 'Ajustes' : 'Configuración', `
+        ${S.fromQR ? '<div class="banner ok"><b>Código leído</b><span>Revise con la enfermera que los datos sean correctos.</span></div>' : ''}
+        <h2 class="scr">Revise los datos</h2>
+        <div class="summary">
+          ${row('obPatient', 'Paciente', esc(d.patient) + (d.carer ? `<br><span class="lead">Hace la diálisis: ${esc(d.carer)}</span>` : ''))}
+          ${row('obMode', 'Tipo de diálisis', 'Manual, con bolsas')}
+          ${row('obTimes', 'Recambios al día', `${d.count} · ${d.times.join(', ')}`)}
+          ${row('obBag', 'Tamaño de la bolsa', `${(d.bag / 1000).toLocaleString('es')} L`)}
+          ${row('obUnit', 'Teléfono del hospital', `${esc(d.phone)}<br><span class="lead">${esc(d.unit)}</span>`)}
+        </div>
+      `, `${editing ? '<button class="btn ghost" data-go="settings">Cancelar</button>' : ''}<button class="btn" id="ob-save">${I.check} ${editing ? 'Guardar' : 'Guardar y terminar'}</button>`,
+      { back: editing ? 'settings' : (S.fromQR ? 'welcome' : 'obUnit') });
+    },
+
+    obDone() {
+      return shell('', `
+        <div class="pic" style="background:var(--ok-soft);color:var(--ok)"><svg viewBox="0 0 160 120" fill="none" stroke="currentColor" stroke-width="8" stroke-linecap="round" stroke-linejoin="round"><circle cx="80" cy="60" r="44"/><path d="M58 62l15 15 30-32"/></svg></div>
+        <h2 class="scr" style="text-align:center">Todo listo</h2>
+        <p class="lead" style="text-align:center">La guía de <b>${esc(CFG.patient)}</b> está preparada. ¿Quieren practicar un recambio ahora, con la enfermera?</p>
+        <div class="note">En la práctica se recorren todos los pasos, pero no se anota nada en el registro.</div>
+      `, `<div class="stack">
+        <button class="btn" data-act="practice">${I.play} Practicar un recambio</button>
+        <button class="btn ghost wide" data-go="home">Ir al inicio</button>
+      </div>`);
+    },
+
+    settings() {
+      return shell('Ajustes', `
+        <h2 class="scr">Ajustes</h2>
+        <div class="summary">
+          <div class="srow"><span><small>Paciente</small><b>${esc(CFG.patient)}</b></span></div>
+          <div class="srow"><span><small>Recambios al día</small><b>${CFG.count} · ${CFG.times.join(', ')}</b></span></div>
+          <div class="srow"><span><small>Tamaño de la bolsa</small><b>${(CFG.bag / 1000).toLocaleString('es')} L</b></span></div>
+          <div class="srow"><span><small>Teléfono del hospital</small><b>${esc(CFG.phone)}</b></span></div>
+        </div>
+        <button class="btn ghost wide" data-act="edit">Cambiar la configuración</button>
+        <button class="btn ghost wide" data-act="practice">${I.play} Practicar un recambio</button>
+        <div class="danger">
+          <b>Empezar como familia nueva</b>
+          <span>Borra la configuración y el registro de este teléfono. Sirve para mostrar la instalación desde cero.</span>
+          ${S.confirmReset
+            ? '<div class="row"><button class="btn alarm" data-act="reset-yes">Sí, borrar todo</button><button class="btn ghost" data-act="reset-no">Cancelar</button></div>'
+            : '<button class="btn ghost wide" data-act="reset">Empezar de nuevo</button>'}
+        </div>
       `, '', { back: 'home' });
     }
   };
 
+  const OB_STEPS = ['obPatient', 'obMode', 'obTimes', 'obBag', 'obUnit'];
+  function obShell(key, title, inner, nextLabel) {
+    const i = OB_STEPS.indexOf(key), n = OB_STEPS.length;
+    const prev = S.fromSummary ? 'obSummary' : (i === 0 ? 'welcome' : OB_STEPS[i - 1]);
+    return shell('', `
+      <div class="progress" aria-hidden="true">${OB_STEPS.map((_, j) => `<i class="${j <= i ? 'on' : ''}"></i>`).join('')}</div>
+      <div class="stepno">Configuración · ${i + 1} de ${n}</div>
+      <h2 class="scr">${title}</h2>
+      ${inner}
+    `, `<button class="btn ghost" data-go="${prev}" aria-label="Atrás">${I.back}</button>
+        <button class="btn" id="ob-next">${S.fromSummary ? 'Listo' : (nextLabel || 'Siguiente')} ${I.next}</button>`);
+  }
+  // Lee lo escrito en la pantalla de configuración actual. Devuelve un mensaje si falta algo.
+  function readOb() {
+    const d = S.draft, val = id => { const el = app.querySelector('#' + id); return el ? el.value.trim() : ''; };
+    if (S.screen === 'obPatient') { d.patient = val('ob-patient'); d.carer = val('ob-carer'); if (!d.patient) return 'Escriba el nombre del paciente.'; }
+    if (S.screen === 'obTimes') d.times = d.times.map((t, i) => val('ob-t' + i) || t).sort();
+    if (S.screen === 'obUnit') { d.unit = val('ob-unit') || DEFAULTS.unit; d.phone = val('ob-phone'); if (!d.phone) return 'Escriba el teléfono del hospital.'; }
+    return '';
+  }
+
   function callCard() {
     return `<div class="callcard">
-      <span class="lead">${UNIT}</span>
-      <span class="num">${PHONE}</span>
-      <span class="lead" style="font-size:.82em">Número de ejemplo</span>
+      <span class="lead">${esc(CFG.unit)}</span>
+      <span class="num">${esc(CFG.phone)}</span>
+      ${CFG.phone === DEFAULTS.phone ? '<span class="lead" style="font-size:.82em">Número de ejemplo</span>' : ''}
       <div class="row">
-        <a class="btn alarm" href="tel:${PHONE.replace(/\s/g, '')}">${I.phone} Llamar</a>
+        <a class="btn alarm" href="tel:${esc(CFG.phone.replace(/[^\d+]/g, ''))}">${I.phone} Llamar</a>
         <button class="btn ghost" id="copy" aria-label="Copiar número">${I.copy}</button>
       </div>
     </div>`;
@@ -615,29 +823,68 @@ button:focus-visible, a:focus-visible, input:focus-visible { outline: 3px solid 
   }
   function go(screen) {
     stopSpeak();
+    clearTimeout(S.scanT);
+    if (screen === 'home') S.practice = false;
+    if (screen !== 'settings') S.confirmReset = false;
     if (screen === 'prep' && S.screen === 'home') S.checks = PREP.map(() => false);
     if (screen === 'step') { if (S.screen === 'prep') S.step = 0; resetTimer(STEPS[S.step].timer); }
     if (screen !== 'step') resetTimer(0);
+    if (screen === 'register') {
+      S.reg.vol = CFG.bag;
+      const last = LOG.slice().reverse().find(e => e.peso);
+      S.reg.peso = last ? last.peso : '';
+    }
     S.screen = screen; S._scrollTop = true; render();
+    if (screen === 'obScan') {
+      // Simula la lectura del código QR del hospital.
+      S.scanT = setTimeout(() => {
+        if (S.screen !== 'obScan') return;
+        S.draft = clone(EXAMPLE); S.fromQR = true; S.fromSummary = true;
+        beep(); go('obSummary');
+      }, 2600);
+    }
   }
 
   app.addEventListener('click', e => {
     const t = e.target.closest('button, a'); if (!t) return;
     if (t.id === 'aa') { S.large = !S.large; try { localStorage.setItem('dp-large', S.large ? '1' : '0'); } catch (err) {} render(); return; }
     if (t.dataset.go) { go(t.dataset.go); return; }
+    if (t.dataset.act) {
+      switch (t.dataset.act) {
+        case 'start': S.draft = newDraft(); S.fromQR = false; S.fromSummary = false; go('obPatient'); break;
+        case 'edit': S.draft = clone(CFG); S.fromQR = false; S.fromSummary = true; go('obSummary'); break;
+        case 'practice': S.practice = true; S.checks = PREP.map(() => false); go('prep'); break;
+        case 'reset': S.confirmReset = true; render(); break;
+        case 'reset-no': S.confirmReset = false; render(); break;
+        case 'reset-yes':
+          try { localStorage.removeItem('dp-config'); localStorage.removeItem('dp-log'); } catch (err) {}
+          CFG = null; LOG = []; S.practice = false; S.draft = newDraft(); go('welcome'); break;
+      }
+      return;
+    }
+    if (t.dataset.pick) {
+      const [k, v] = t.dataset.pick.split(':'), d = S.draft;
+      readOb();
+      if (k === 'mode') d.mode = v;
+      else { d[k] = +v; if (k === 'count') d.times = SCHEDULES[v].slice(); }
+      render(); return;
+    }
+    if (t.dataset.edit) { S.fromSummary = true; go(t.dataset.edit); return; }
     if (t.dataset.say) { speak(t.dataset.say, t); return; }
     if (t.dataset.check) { const i = +t.dataset.check; S.checks[i] = !S.checks[i]; render(); return; }
     if (t.dataset.open) { S.alarmOpen = S.alarmOpen === t.dataset.open ? null : t.dataset.open; render(); return; }
-    if (t.dataset.rem) { const r = S.reminders[+t.dataset.rem]; r.on = !r.on; render(); return; }
+    if (t.dataset.rem) { const r = CFG.reminders[+t.dataset.rem]; r.on = !r.on; saveCfg(); render(); return; }
     if (t.dataset.aspect) {
       S.aspect = t.dataset.aspect;
       if (S.aspect === 'claro') go('register');
-      else { LOG.push({ t: Date.now(), vol: 0, aspect: S.aspect }); saveLog(); go('alert'); beep(); }
+      else { if (!S.practice) { LOG.push({ t: Date.now(), vol: 0, aspect: S.aspect }); saveLog(); } go('alert'); beep(); }
       return;
     }
     if (t.dataset.adj) {
       const k = t.dataset.adj, d = parseFloat(t.dataset.d);
-      readReg(); S.reg[k] = Math.max(0, Math.round((S.reg[k] + d) * 10) / 10);
+      readReg();
+      const base = S.reg[k] === '' ? (k === 'peso' ? 60 : CFG.bag) : S.reg[k];
+      S.reg[k] = Math.max(0, Math.round((base + d) * 10) / 10);
       const inp = app.querySelector('#' + k); if (inp) inp.value = k === 'peso' ? S.reg[k].toFixed(1) : S.reg[k];
       return;
     }
@@ -661,10 +908,26 @@ button:focus-visible, a:focus-visible, input:focus-visible { outline: 3px solid 
         render(); break;
       case 't-reset': resetTimer(STEPS[S.step].timer); render(); break;
       case 'save':
-        readReg(); LOG.push({ t: Date.now(), vol: S.reg.vol, peso: S.reg.peso, aspect: 'claro' }); saveLog(); go('finished'); break;
+        readReg();
+        if (!S.practice) { const e = { t: Date.now(), vol: S.reg.vol, aspect: 'claro' }; if (S.reg.peso !== '') e.peso = S.reg.peso; LOG.push(e); saveLog(); }
+        go('finished'); break;
+      case 'ob-next': {
+        const err = readOb(); if (err) { toast(err); break; }
+        const i = OB_STEPS.indexOf(S.screen);
+        go(S.fromSummary || i === OB_STEPS.length - 1 ? 'obSummary' : OB_STEPS[i + 1]);
+        break;
+      }
+      case 'ob-save': {
+        const first = !CFG, d = S.draft;
+        const prevOn = h => { const r = CFG && CFG.reminders.find(x => x.h === h); return r ? r.on : true; };
+        CFG = Object.assign(clone(d), { reminders: d.times.map(h => ({ h, on: prevOn(h) })) });
+        saveCfg();
+        if (first) { LOG = []; saveLog(); go('obDone'); } else { go('settings'); toast('Cambios guardados'); }
+        break;
+      }
       case 'copy': {
         const done = () => toast('Número copiado');
-        try { navigator.clipboard.writeText(PHONE).then(done, () => toast('Mantenga presionado el número para copiarlo')); }
+        try { navigator.clipboard.writeText(CFG.phone).then(done, () => toast('Mantenga presionado el número para copiarlo')); }
         catch (err) { toast('Mantenga presionado el número para copiarlo'); }
         break;
       }
@@ -673,7 +936,7 @@ button:focus-visible, a:focus-visible, input:focus-visible { outline: 3px solid 
   function readReg() {
     const v = app.querySelector('#vol'), p = app.querySelector('#peso');
     if (v) { const n = parseInt(v.value, 10); if (!isNaN(n)) S.reg.vol = n; }
-    if (p) { const n = parseFloat(String(p.value).replace(',', '.')); if (!isNaN(n)) S.reg.peso = n; }
+    if (p) { const n = parseFloat(String(p.value).replace(',', '.')); S.reg.peso = isNaN(n) ? '' : n; }
   }
 
   // Iconos de las notas
