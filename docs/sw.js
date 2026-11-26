@@ -1,6 +1,6 @@
 // Service worker de Diálisis Contigo: guarda la app en el teléfono para que abra sin internet.
 // Cada vez que cambie el contenido de la app, suba el número de versión para que los teléfonos descarguen la nueva.
-const VERSION = 'v2';
+const VERSION = 'v3';
 const APP_CACHE = 'app-' + VERSION;
 const FONT_CACHE = 'fuentes';
 
@@ -23,6 +23,15 @@ self.addEventListener('activate', event => {
     caches.keys()
       .then(keys => Promise.all(keys.filter(k => k.startsWith('app-') && k !== APP_CACHE).map(k => caches.delete(k))))
       .then(() => self.clients.claim())
+  );
+});
+
+// Al tocar el aviso de "Tiempo terminado", vuelve a la app.
+self.addEventListener('notificationclick', event => {
+  event.notification.close();
+  event.waitUntil(
+    self.clients.matchAll({ type: 'window', includeUncontrolled: true })
+      .then(list => (list.length ? list[0].focus() : self.clients.openWindow('./')))
   );
 });
 
