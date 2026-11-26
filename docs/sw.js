@@ -1,6 +1,7 @@
+// Diálisis Contigo · Copyright (C) 2026 Enrique Ortiz · SPDX-License-Identifier: GPL-3.0-or-later
 // Service worker de Diálisis Contigo: guarda la app en el teléfono para que abra sin internet.
 // Debe ser igual a APP_VERSION en index.html (la prueba lo comprueba). Al cambiarla, los teléfonos descargan la app nueva.
-const VERSION = '0.0.3.1';
+const VERSION = '0.0.4.1';
 const APP_CACHE = 'app-' + VERSION;
 const FONT_CACHE = 'fuentes';
 
