@@ -88,3 +88,9 @@ python -m http.server 8080 --directory docs
 ```
 
 y abra <http://localhost:8080>.
+
+## Licencia
+
+Diálisis Contigo es software libre, © 2026 Enrique Ortiz. Puede usarlo, estudiarlo, modificarlo y redistribuirlo según la [Licencia Pública General de GNU](https://www.gnu.org/licenses/gpl-3.0.html), versión 3 o (a su elección) cualquier versión posterior. Si distribuye una versión modificada, también debe publicarla como software libre bajo la misma licencia.
+
+Se distribuye **sin ninguna garantía**. No reemplaza las indicaciones del equipo médico. El texto completo está en [LICENSE](LICENSE).

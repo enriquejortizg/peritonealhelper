@@ -148,6 +148,15 @@ button:focus-visible, a:focus-visible, input:focus-visible { outline: 3px solid 
 .sheet h3 { margin: 0; font-family: var(--font-display); font-size: 1.25em; }
 .sheet p { margin: 0; }
 .sheet .row { display: grid; gap: 8px; }
+.sheet.scroll { max-height: 100%; overflow-y: auto; }
+.legal { margin: 0; color: var(--muted); font-size: .8em; text-align: center; }
+.legal a { color: var(--accent); }
+.checkrow { display: grid; grid-template-columns: minmax(0, 1fr) 52px; gap: 8px; }
+.info { border: 2px solid var(--accent); background: var(--accent-soft); color: var(--accent); border-radius: 16px; cursor: pointer; display: grid; place-items: center; }
+.info svg { width: 26px; height: 26px; }
+.todo { list-style: none; margin: 0; padding: 0; display: grid; gap: 10px; }
+.todo li { display: grid; grid-template-columns: 22px minmax(0, 1fr); gap: 10px; align-items: start; }
+.todo svg { width: 20px; height: 20px; color: var(--ok); margin-top: 3px; }
 .sheet video { width: 100%; max-height: 60vh; border-radius: 12px; background: #000; }
 
 .timer { border-radius: 20px; border: 2px solid var(--accent); padding: 16px; display: grid; gap: 12px; justify-items: center; text-align: center; }
@@ -301,6 +310,10 @@ html.modo-app, html.modo-app body { height: 100%; margin: 0; }
 </div>
 
 <script>
+// Diálisis Contigo · Copyright (C) 2026 Enrique Ortiz
+// SPDX-License-Identifier: GPL-3.0-or-later
+// Software libre: puede redistribuirlo o modificarlo según la Licencia Pública General de GNU, versión 3
+// o (a su elección) cualquier versión posterior. Se distribuye SIN NINGUNA GARANTÍA. Ver el archivo LICENSE.
 (function () {
   // ---------- Iconos ----------
   const I = {
@@ -323,6 +336,7 @@ html.modo-app, html.modo-app body { height: 100%; margin: 0; }
     pause: '<svg viewBox="0 0 24 24" fill="currentColor"><rect x="6" y="5" width="4" height="14" rx="1"/><rect x="14" y="5" width="4" height="14" rx="1"/></svg>',
     stop: '<svg viewBox="0 0 24 24" fill="currentColor"><rect x="6" y="6" width="12" height="12" rx="2"/></svg>',
     video: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linejoin="round"><rect x="3" y="6" width="13" height="12" rx="2"/><path d="M16 10l5-3v10l-5-3z"/></svg>',
+    info: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><circle cx="12" cy="12" r="9"/><path d="M12 11v6M12 7.5v.01"/></svg>',
     bag: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M7 4h10v12a5 5 0 0 1-10 0z"/><path d="M12 21v2M10 2h4"/><path d="M7 11h10"/></svg>',
     machine: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="7" width="18" height="12" rx="2"/><rect x="6" y="10" width="7" height="4" rx="1"/><path d="M16 11h2M16 14h2M8 4h8"/></svg>',
     qr: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><path d="M14 14h3v3M21 14v.01M14 21h3M20 18v3"/></svg>',
@@ -379,18 +393,62 @@ html.modo-app, html.modo-app body { height: 100%; margin: 0; }
   const fluid = (fillColor, op, dots) => `<svg viewBox="0 0 64 64"><path d="M16 6h32v36a16 16 0 0 1-32 0z" fill="none" stroke="currentColor" stroke-width="3.5"/><path d="M16 24h32v18a16 16 0 0 1-32 0z" fill="${fillColor}" fill-opacity="${op}"/>${dots || ''}</svg>`;
 
   // ---------- Contenido (EJEMPLO) ----------
+  // "Antes de empezar". Cada punto tiene un detalle (botón de información) con lo que hay que hacer
+  // para darlo por cumplido. Pendiente de validar con el equipo de nefrología.
+  //   label: texto de la lista · items: qué hacer · ask: lo que hay que confirmar con la enfermera (opcional)
   const PREP = [
-    'Cerré puertas y ventanas, y apagué el ventilador',
-    'La mesa está limpia y desinfectada',
-    'Tengo la bolsa nueva, un tapón nuevo y las pinzas',
-    'El paciente y yo tenemos cubrebocas',
-    'Me quité anillos y reloj'
-  ];
-  // Cada paso puede tener video: ruta del archivo, por ejemplo video: 'videos/lavado-manos.mp4'.
+    {
+      label: 'La habitación está cerrada, sin ventilador ni mascotas',
+      items: [
+        'Cierre las puertas y ventanas de la habitación.',
+        'Apague el ventilador y el aire acondicionado. El aire mueve polvo y gérmenes hacia las conexiones.',
+        'Saque a las mascotas de la habitación.',
+        'Pida que nadie entre ni salga mientras hace el recambio.'
+      ]
+    },
+    {
+      label: 'La mesa está limpia y desinfectada',
+      items: [
+        'Use una mesa solo para el recambio. Quite comida, papeles y cualquier otra cosa.',
+        'Limpie la superficie con agua y jabón, y séquela.',
+        'Desinfecte la superficie con el producto que le indicó la enfermera.',
+        'Deje que se seque sola. No ponga nada encima hasta que esté seca.'
+      ],
+      ask: 'Pregunte a la enfermera qué desinfectante usar y cómo.'
+    },
+    {
+      label: 'Tengo la bolsa nueva, un tapón nuevo y las pinzas',
+      items: [
+        'Bolsa nueva, con la concentración que le indicaron.',
+        'Revise la bolsa: que no esté vencida, que no esté rota ni gotee (apriétela un poco) y que el líquido se vea transparente.',
+        'Un tapón nuevo, todavía cerrado en su empaque.',
+        'Las pinzas.',
+        'Si una bolsa está vencida, gotea o se ve turbia, no la use. Aparte otra.'
+      ],
+      ask: 'Pregunte a la enfermera si debe entibiar la bolsa y cómo hacerlo.'
+    },
+    {
+      label: 'El paciente y yo tenemos mascarilla',
+      items: [
+        'El paciente y quien hace el recambio se ponen la mascarilla antes de abrir el material.',
+        'Debe tapar la nariz y la boca, bien ajustada.',
+        'No la toque ni la baje durante el recambio. Si la toca, lávese las manos otra vez.'
+      ]
+    },
+    {
+      label: 'Uñas cortas, sin anillos, reloj ni pulseras',
+      items: [
+        'Las uñas deben estar cortas y sin esmalte.',
+        'Quítese anillos, pulseras y reloj.',
+        'Súbase las mangas hasta el codo.',
+        'El lavado de manos es el primer paso: de 40 a 60 segundos con agua y jabón, y secado con toalla limpia o papel.'
+      ]
+    }
+  ];  // Cada paso puede tener video: ruta del archivo, por ejemplo video: 'videos/lavado-manos.mp4'.
   // Sin video, el botón "Ver video" aparece deshabilitado.
   const STEPS = [
     { pic: 'hands', title: 'Lávese las manos', text: 'Lave sus manos con agua y jabón. Frote entre los dedos y debajo de las uñas. Séquelas con una toalla de papel.', tip: 'No toque nada más después de lavarse. Si toca algo, vuelva a lavarse.', timer: 60, timerLabel: 'Frote las manos hasta que termine el reloj' },
-    { pic: 'mask', title: 'Póngase el cubrebocas', text: 'Usted y el paciente se ponen el cubrebocas. Debe tapar la nariz y la boca.' },
+    { pic: 'mask', title: 'Póngase la mascarilla', text: 'Usted y el paciente se ponen la mascarilla. Debe tapar la nariz y la boca.' },
     { pic: 'table', title: 'Prepare la mesa', text: 'Ponga en la mesa limpia la bolsa nueva, el tapón nuevo y las pinzas.' },
     { pic: 'inspect', title: 'Revise la bolsa', text: 'Mire la fecha de caducidad y la concentración. El líquido debe verse transparente. Apriete la bolsa para ver que no gotee.', tip: 'Si la bolsa gotea, está vencida o el líquido se ve turbio, no la use. Use otra.' },
     { pic: 'connect', title: 'Conecte la línea', text: 'Quite el tapón del catéter y conecte la línea de la bolsa. No toque las puntas con los dedos.', tip: 'Si una punta toca algo, no conecte. Llame al hospital.' },
@@ -410,7 +468,7 @@ html.modo-app, html.modo-app body { height: 100%; margin: 0; }
   ];
   const APP_NAME = 'Diálisis Contigo';
   // Versión: PRODUCCIÓN.GRANDE.RELEASE.MENOR (ver CLAUDE.md). Debe ser igual a VERSION en sw.js.
-  const APP_VERSION = '0.0.3.1';
+  const APP_VERSION = '0.0.4.1';
 
   // ---------- Configuración de cada familia ----------
   // Se llena en la configuración inicial y se guarda solo en este teléfono.
@@ -620,6 +678,18 @@ html.modo-app, html.modo-app body { height: 100%; margin: 0; }
           <button class="btn ghost wide" data-act="modal-close">No, seguir con ${S.practice ? 'la práctica' : 'el recambio'}</button>
         </div></div></div>`;
     }
+    if (S.modal.type === 'prep') {
+      const p = PREP[S.modal.i], done = S.checks[S.modal.i];
+      return `<div class="modal" role="dialog" aria-modal="true" aria-labelledby="m-t"><div class="sheet scroll">
+        <h3 id="m-t">${p.label}</h3>
+        <p class="lead">Para darlo por listo:</p>
+        <ul class="todo">${p.items.map(x => `<li>${I.check}<span>${x}</span></li>`).join('')}</ul>
+        ${p.ask ? `<div class="tip">${I.alert}<span>${p.ask}</span></div>` : ''}
+        ${sayBtn(`${p.label}. ${p.items.join(' ')} ${p.ask || ''}`.trim())}        <div class="row">
+          ${done ? '' : `<button class="btn" data-act="prep-done">${I.check} Listo, ya lo hice</button>`}
+          <button class="btn ghost wide" data-act="modal-close">Cerrar</button>
+        </div></div></div>`;
+    }
     const st = STEPS[S.step];
     return `<div class="modal" role="dialog" aria-modal="true" aria-labelledby="m-t"><div class="sheet">
       <h3 id="m-t">${st.title}</h3>
@@ -691,12 +761,15 @@ html.modo-app, html.modo-app body { height: 100%; margin: 0; }
       return shell('Antes de empezar', `
         <div>
           <h2 class="scr">Antes de empezar</h2>
-          <p class="lead">Toque cada cosa cuando esté lista.</p>
+          <p class="lead">Toque cada cosa cuando esté lista. Si tiene dudas, toque el botón <b>i</b> para ver exactamente qué hacer.</p>
         </div>
         <div class="checks">
-          ${PREP.map((p, i) => `<button class="check" role="checkbox" aria-checked="${S.checks[i]}" data-check="${i}"><span class="box">${I.check}</span><span>${p}</span></button>`).join('')}
+          ${PREP.map((p, i) => `<div class="checkrow">
+            <button class="check" role="checkbox" aria-checked="${S.checks[i]}" data-check="${i}"><span class="box">${I.check}</span><span>${p.label}</span></button>
+            <button class="info" data-act="prep-info" data-i="${i}" aria-label="Qué hacer: ${esc(p.label)}">${I.info}</button>
+          </div>`).join('')}
         </div>
-        ${sayBtn(PREP.join('. ') + '.')}
+        ${sayBtn(PREP.map(p => p.label).join('. ') + '.')}
       `, `<button class="btn" data-go="step" ${all ? '' : 'disabled'}>${all ? 'Empezar los pasos' : `Faltan ${S.checks.filter(c => !c).length}`} ${I.next}</button>`, { back: 'home' });
     },
 
@@ -941,6 +1014,7 @@ html.modo-app, html.modo-app body { height: 100%; margin: 0; }
             ? '<div class="row"><button class="btn alarm" data-act="reset-yes">Sí, borrar todo</button><button class="btn ghost" data-act="reset-no">Cancelar</button></div>'
             : '<button class="btn ghost wide" data-act="reset">Empezar de nuevo</button>'}
         </div>
+        <p class="legal">${APP_NAME} v${APP_VERSION} · Software libre bajo la licencia <a href="https://www.gnu.org/licenses/gpl-3.0.html" target="_blank" rel="noopener">GPL-3.0</a>, sin ninguna garantía. <a href="https://github.com/enriquejortizg/peritonealhelper" target="_blank" rel="noopener">Código fuente</a>.</p>
       `, '', { back: 'home' });
     }
   };
@@ -1027,7 +1101,9 @@ html.modo-app, html.modo-app body { height: 100%; margin: 0; }
         case 'practice': S.practice = true; S.checks = PREP.map(() => false); go('prep'); break;
         case 'home-ask': S.modal = { type: 'home' }; render(); break;
         case 'home-yes': resetTimer(0); go('home'); break;
-        case 'modal-close': S.modal = null; render(); break;
+        case 'modal-close': S.modal = null; stopSpeak(); render(); break;
+        case 'prep-info': stopSpeak(); S.modal = { type: 'prep', i: +t.dataset.i }; render(); break;
+        case 'prep-done': S.checks[S.modal.i] = true; S.modal = null; stopSpeak(); render(); break;
         case 'video': stopSpeak(); S.modal = { type: 'video' }; render(); break;
         case 'reset': S.confirmReset = true; render(); break;
         case 'reset-no': S.confirmReset = false; render(); break;

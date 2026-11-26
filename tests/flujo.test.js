@@ -1,3 +1,4 @@
+// Diálisis Contigo · Copyright (C) 2026 Enrique Ortiz · SPDX-License-Identifier: GPL-3.0-or-later
 // Prueba del flujo de familia nueva con un DOM mínimo simulado.
 // Uso, desde la carpeta del repositorio: node tests/flujo.test.js
 const fs = require('fs');
@@ -100,7 +101,12 @@ const has = s => appHTML.includes(s);
 
   click({ data: { act: 'practice' } });
   ok(has('Antes de empezar') && has('MODO PRÁCTICA'), 'Práctica: lista de preparación en modo práctica');
-  for (let i = 0; i < 5; i++) click({ data: { check: String(i) } });
+  ok((appHTML.match(/data-act="prep-info"/g) || []).length === 5, 'Cada punto de preparación tiene su botón de información');
+  click({ data: { act: 'prep-info', i: '1' } });
+  ok(has('Para darlo por listo') && has('Desinfecte la superficie') && has('qué desinfectante'), 'El botón i muestra qué hacer para la mesa');
+  click({ data: { act: 'prep-done' } });
+  ok(!has('Para darlo por listo') && /aria-checked="true" data-check="1"/.test(appHTML), '"Listo, ya lo hice" cierra el detalle y marca el punto');
+  for (let i = 0; i < 5; i++) if (i !== 1) click({ data: { check: String(i) } });
   click({ data: { go: 'step' } });
   for (let i = 0; i < 10; i++) click({ id: 'next' });
   click({ data: { aspect: 'claro' } });
@@ -156,6 +162,7 @@ const has = s => appHTML.includes(s);
   click({ id: 'ob-save' });
   ok(has('Ajustes') && JSON.parse(store['dp-config']).count === 5 && JSON.parse(store['dp-log']).length === 1, 'Editar en Ajustes conserva el registro');
 
+  ok(has('GPL-3.0') && has('Código fuente'), 'Ajustes muestra la licencia libre y el enlace al código');
   click({ data: { act: 'reset' } });
   ok(has('Sí, borrar todo'), 'Reiniciar pide confirmación');
   click({ data: { act: 'reset-yes' } });

@@ -21,6 +21,7 @@ App para que los familiares de pacientes de un servicio de diálisis hospitalari
 - `tests/flujo.test.js`: prueba del flujo de familia nueva con un DOM simulado. Se corre con `node tests/flujo.test.js`.
 
 ## Funciones actuales
+- "Antes de empezar": cada punto tiene un botón **i** que abre lo que hay que hacer para darlo por cumplido (`PREP[].items`, más `ask` para lo que hay que confirmar con la enfermera), con Escuchar y "Listo, ya lo hice".
 - Configuración inicial con la enfermera: nombre del paciente, tipo de diálisis (solo la manual; la de máquina aparece como "Próximamente"), recambios al día y horarios, tamaño de la bolsa, unidad y teléfono. Termina con un resumen y un recambio de práctica que no se anota.
 - Código QR del hospital **simulado**: no usa la cámara y carga `EXAMPLE`.
 - Recambio guiado de 10 pasos con temporizadores, aspecto del líquido, alarmas, registro, recordatorios y ajustes (incluye "Empezar de nuevo" para repetir la demostración).
@@ -46,7 +47,10 @@ La versión se ve junto al título de la app, en letra pequeña y gris (por ejem
 
 Va en dos lugares que deben coincidir: `APP_VERSION` en `docs/index.html` y `VERSION` en `docs/sw.js`. La prueba falla si no son iguales. Cambiar `VERSION` es lo que hace que los teléfonos descarguen la app nueva.
 
-Historial: 0.0.1 prototipo inicial · 0.0.2 configuración inicial y nombre · 0.0.3 mejoras tras probar en teléfono · 0.0.3.1 versión visible.
+Historial: 0.0.1 prototipo inicial · 0.0.2 configuración inicial y nombre · 0.0.3 mejoras tras probar en teléfono · 0.0.3.1 versión visible · 0.0.4.1 detalle de "Antes de empezar".
+
+## Licencia
+Software libre bajo **GPL-3.0-or-later**, © 2026 Enrique Ortiz. El texto oficial está en `LICENSE`. Los archivos de código llevan una cabecera SPDX, y Ajustes muestra el aviso de licencia con un enlace al código fuente. Los archivos nuevos de código deben llevar la misma cabecera.
 
 ## Decisiones tomadas
 - Se descartó un bot de Telegram: necesita algo encendido siempre, requiere internet y da poco control de la presentación.

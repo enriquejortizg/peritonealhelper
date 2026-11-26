@@ -1,3 +1,4 @@
+// Diálisis Contigo · Copyright (C) 2026 Enrique Ortiz · SPDX-License-Identifier: GPL-3.0-or-later
 // Genera dialisis-contigo.html (versión de presentación: la app dentro de un teléfono, con notas)
 // a partir de docs/index.html, que es la única fuente de la app.
 //
