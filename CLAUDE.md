@@ -15,7 +15,7 @@ App para que los familiares de pacientes de un servicio de diálisis hospitalari
 
 ## Estructura
 - `docs/index.html`: **única fuente de la app**, con HTML, CSS y JS en un solo archivo y sin dependencias. El contenido editable está en constantes al principio del `<script>`: `PREP`, `STEPS`, `ALARMS`, `APP_NAME`, `DEFAULTS`, `SCHEDULES`, `EXAMPLE`.
-- `docs/sw.js`: service worker para uso sin internet. **Suba `VERSION` cada vez que cambie la app.**
+- `docs/sw.js`: service worker para uso sin internet. Su `VERSION` debe ser igual a `APP_VERSION` (ver "Versiones").
 - `docs/manifest.json` y `docs/icons/`: instalación en Android.
 - `dialisis-contigo.html`: versión de presentación **generada**; no se edita a mano. Se regenera con `node scripts/generar-presentacion.mjs`, que quita los bloques `<!-- solo-app -->` y la clase `modo-app`.
 - `tests/flujo.test.js`: prueba del flujo de familia nueva con un DOM simulado. Se corre con `node tests/flujo.test.js`.
@@ -32,10 +32,21 @@ App para que los familiares de pacientes de un servicio de diálisis hospitalari
 
 ## Forma de trabajar
 1. Trabajar en una rama nueva y editar `docs/index.html`.
-2. Subir `VERSION` en `docs/sw.js`.
+2. Cambiar la versión en `APP_VERSION` (`docs/index.html`) y en `VERSION` (`docs/sw.js`), con el mismo valor.
 3. Correr `node tests/flujo.test.js` y `node scripts/generar-presentacion.mjs`.
 4. Hacer commit, push y PR. El usuario fusiona los PR, y al fusionar en `main` se publica solo en uno o dos minutos.
 5. Para probar en local: `python -m http.server 8080` desde la raíz y abrir http://localhost:8080/docs/.
+
+## Versiones
+La versión se ve junto al título de la app, en letra pequeña y gris (por ejemplo, `v0.0.3.1`). Tiene el formato **PRODUCCIÓN.GRANDE.RELEASE.MENOR**:
+- **PRODUCCIÓN**: 0 mientras sea prototipo; pasa a 1 al salir a producción.
+- **GRANDE**: cambios grandes.
+- **RELEASE**: sube con **cada cambio que llega a `main`**, y el número MENOR vuelve a 1.
+- **MENOR**: correcciones de un release que salió con algo equivocado y se vuelve a subir (0.0.3.1 → 0.0.3.2).
+
+Va en dos lugares que deben coincidir: `APP_VERSION` en `docs/index.html` y `VERSION` en `docs/sw.js`. La prueba falla si no son iguales. Cambiar `VERSION` es lo que hace que los teléfonos descarguen la app nueva.
+
+Historial: 0.0.1 prototipo inicial · 0.0.2 configuración inicial y nombre · 0.0.3 mejoras tras probar en teléfono · 0.0.3.1 versión visible.
 
 ## Decisiones tomadas
 - Se descartó un bot de Telegram: necesita algo encendido siempre, requiere internet y da poco control de la presentación.

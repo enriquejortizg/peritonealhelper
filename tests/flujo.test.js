@@ -49,6 +49,12 @@ const has = s => appHTML.includes(s);
 (async () => {
   ok(has('Bienvenidos'), 'Primera vez: pantalla de bienvenida');
 
+  // Versión visible e igual en la app y en el service worker
+  const appVer = (js.match(/APP_VERSION = '([^']+)'/) || [])[1];
+  const swVer = (fs.readFileSync(path.join(__dirname, '..', 'docs', 'sw.js'), 'utf8').match(/VERSION = '([^']+)'/) || [])[1];
+  ok(/^\d+\.\d+\.\d+\.\d+$/.test(appVer || '') && has('v' + appVer), `Se muestra la versión v${appVer} junto al título`);
+  ok(appVer === swVer, `La versión de la app (${appVer}) es igual a la de sw.js (${swVer})`);
+
   // Escuchar: pausar, continuar y detener
   const ss = speechSynthesis, sayText = () => appHTML.match(/data-say="([^"]*)"/)[1];
   click({ data: { say: sayText() } });
