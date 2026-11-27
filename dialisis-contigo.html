@@ -304,7 +304,7 @@ html.modo-app, html.modo-app body { height: 100%; margin: 0; }
       <li><span class="dot" data-i="play"></span><div><b>Recambio de práctica</b><span>Al terminar la configuración se puede practicar un recambio completo sin que se anote en el registro.</span></div></li>
       <li><span class="dot" data-i="steps"></span><div><b>Un paso por pantalla</b><span>Dibujo grande, frase corta y botón grande de Siguiente. Hecho para personas nerviosas o con poca práctica leyendo.</span></div></li>
       <li><span class="dot" data-i="speaker"></span><div><b>Cada paso se escucha</b><span>El botón Escuchar lee el paso en voz alta. En la versión real se usarían audios grabados por las enfermeras del servicio.</span></div></li>
-      <li><span class="dot" data-i="mic"></span><div><b>Modo automático</b><span>Con las manos ya lavadas, la app lee cada paso y avanza cuando el familiar dice «Siguiente» o pasa la mano dos veces frente a la cámara, incluso sin esperar a que termine de leer.</span></div></li>
+      <li><span class="dot" data-i="mic"></span><div><b>Modo automático</b><span>Con las manos ya lavadas, la app lee cada paso y avanza cuando el familiar dice «Siguiente» o pasa la mano una vez frente a la cámara, incluso sin esperar a que termine de leer.</span></div></li>
       <li><span class="dot" data-i="clock"></span><div><b>Temporizadores</b><span>Lavado de manos, drenaje e infusión llevan su propio reloj con aviso al terminar. Hay un botón para adelantarlo en la demostración.</span></div></li>
       <li><span class="dot" data-i="alert"></span><div><b>Señales de alarma</b><span>Si el líquido sale turbio o con sangre, la app lo indica y muestra el teléfono que se configuró.</span></div></li>
       <li><span class="dot" data-i="list"></span><div><b>Registro y recordatorios</b><span>Hora, volumen drenado y aspecto del líquido, guardados en el teléfono. Los horarios salen de la configuración.</span></div></li>
@@ -839,7 +839,7 @@ html.modo-app, html.modo-app body { height: 100%; margin: 0; }
     return null;
   }
   const recLang = () => { const l = (navigator.language || ''); return /^es/i.test(l) ? l : 'es-MX'; };
-  const autoHint = () => AUTO.how === 'mano' ? 'Cuando esté listo, pase la mano dos veces frente a la cámara de arriba.' : 'Cuando esté listo, diga Siguiente o pase la mano dos veces frente a la cámara.';
+  const autoHint = () => AUTO.how === 'mano' ? 'Cuando esté listo, pase la mano una vez frente a la cámara de arriba.' : 'Cuando esté listo, diga Siguiente o pase la mano una vez frente a la cámara.';
 
   // ---------- Voz sin internet (Vosk) ----------
   // vosk-browser (Apache 2.0) con el modelo pequeño en español (unos 40 MB). Se descarga una sola vez
@@ -1013,11 +1013,10 @@ html.modo-app, html.modo-app body { height: 100%; margin: 0; }
     if (!AUTO.on || AUTO.how === 'mano') return;
     stopListen(); AUTO.how = 'mano';
     if (!AUTO.useCam) { autoExit(); render(); announce('No puedo oírle. Pida a un acompañante que le muestre los pasos.'); return; }
-    autoSay('No puedo oírle. Para pasar al siguiente paso, pase la mano dos veces frente a la cámara de arriba, sin tocar el teléfono.');
+    autoSay('No puedo oírle. Para pasar al siguiente paso, pase la mano una vez frente a la cámara de arriba, sin tocar el teléfono.');
   }
-  // La cámara de adelante ve la mano de dos formas: cuando pasa por delante (la imagen cambia de golpe)
-  // o cuando la tapa (la imagen se pone oscura). Mira una imagen muy pequeña, 10 veces por segundo.
-  // Después de cada aviso espera a que la imagen se quede quieta un momento antes de aceptar otro.
+  // La cámara de adelante ve pasar la mano: algo nuevo aparece y se va. Mira una imagen muy pequeña,
+  // 10 veces por segundo.
   function camStart() {
     AUTO.camWant = true;
     if (AUTO.cam || !hasCam()) return;
@@ -1028,41 +1027,36 @@ html.modo-app, html.modo-app body { height: 100%; margin: 0; }
       try { const p = v.play(); if (p && p.catch) p.catch(() => {}); } catch (e) {}
       const W = 32, H = 24, c = document.createElement('canvas'); c.width = W; c.height = H;
       const g = c.getContext('2d', { willReadFrequently: true });
-      // Para que no se active solo por moverse cerca del teléfono, hace falta un gesto claro:
-      // pasar la mano DOS veces (dos pasadas cortas, de menos de 1,2 s cada una, en menos de 2,5 s)
-      // o tapar la cámara 1 segundo. Un movimiento largo (alguien inclinado o moviéndose) no cuenta.
-      const cam = AUTO.cam = { stream, prev: null, base: 0, act: false, len: 0, quiet: 0, passes: [], dark: 0, armed: false, t: null };
+      // Compara cada vista con la imagen de cómo estaba la cámara al empezar (la referencia).
+      // Avanza cuando aparece algo nuevo y en menos de 2 s la imagen vuelve a ser como antes:
+      // una mano que pasa una vez. Lo que ya estaba (la cara) no cuenta, y si algo nuevo se queda
+      // (la cámara tapada, alguien que se acerca y se queda), pasa a ser la nueva referencia sin avanzar.
+      const cam = AUTO.cam = { stream, prev: null, ref: null, still: 0, phase: 'learn', t0: 0, t: null };
+      const off = (a, b) => { let n = 0; for (let k = 0; k < a.length; k++) if (Math.abs(a[k] - b[k]) > 30) n++; return n / a.length; };
       cam.t = setInterval(() => {
         if (v.readyState < 2) return;
         g.drawImage(v, 0, 0, W, H);
         const d = g.getImageData(0, 0, W, H).data, cur = new Float32Array(W * H);
-        let sum = 0, diff = 0;
-        for (let i = 0, k = 0; i < d.length; i += 4, k++) { cur[k] = d[i] * .3 + d[i + 1] * .59 + d[i + 2] * .11; sum += cur[k]; }
-        const lum = sum / cur.length, now = Date.now();
-        // diff: qué parte de la imagen cambió de golpe (más de 25 niveles de brillo) desde la vista anterior.
-        if (cam.prev) { for (let k = 0; k < cur.length; k++) if (Math.abs(cur[k] - cam.prev[k]) > 25) diff++; diff /= cur.length; }
+        for (let i = 0, k = 0; i < d.length; i += 4, k++) cur[k] = d[i] * .3 + d[i + 1] * .59 + d[i + 2] * .11;
+        const now = Date.now(), moving = cam.prev ? off(cur, cam.prev) : 1;
         cam.prev = cur;
-        if (!cam.base) { cam.base = lum; return; }
-        const dark = lum < Math.max(15, cam.base * .35), active = diff > .3 || dark;
-        cam.dark = dark ? cam.dark + 1 : 0;
-        if (active) {
-          if (!cam.act) { cam.act = true; cam.len = 0; }
-          cam.len++; cam.quiet = 0;
-          if (cam.len > 12) { cam.passes = []; cam.armed = false; }
+        if (cam.phase === 'learn') {
+          // Espera medio segundo de imagen quieta para tomar la referencia.
+          cam.still = moving < .1 ? cam.still + 1 : 0;
+          if (cam.still >= 5) { cam.ref = cur; cam.phase = 'watch'; }
+          return;
         }
-        else {
-          if (cam.act) {
-            cam.act = false;
-            // Termina una pasada: cuenta solo si fue corta y empezó con la imagen quieta.
-            if (cam.len <= 12 && cam.armed) cam.passes = cam.passes.filter(t => now - t < 2500).concat(now);
-            else cam.passes = [];
-          }
-          cam.quiet++;
-          cam.base = cam.base * .95 + lum * .05;
-          if (cam.quiet >= 5) cam.armed = true;
+        const diff = off(cur, cam.ref);
+        if (cam.phase === 'watch') {
+          if (diff > .3) { cam.phase = 'event'; cam.t0 = now; }
+          else for (let k = 0; k < cur.length; k++) cam.ref[k] = cam.ref[k] * .9 + cur[k] * .1; // sigue cambios lentos de luz
+          return;
         }
-        const go = cam.passes.length >= 2 || cam.dark === 10;
-        if (go && AUTO.camWant) { cam.passes = []; cam.armed = false; autoCmd('next', true); }
+        // phase 'event': apareció algo nuevo.
+        if (diff < .15) {
+          cam.phase = 'watch';
+          if (now - cam.t0 >= 150 && AUTO.camWant) autoCmd('next', true);
+        } else if (now - cam.t0 > 2000) { cam.phase = 'learn'; cam.still = 0; }
       }, 100);
     }).catch(() => {
       AUTO.cam = null; AUTO.useCam = false;
@@ -1076,8 +1070,8 @@ html.modo-app, html.modo-app body { height: 100%; margin: 0; }
   }
   function autoBar() {
     if (!AUTO.on) return '';
-    const hand = AUTO.useCam ? ' o pase la mano dos veces frente a la cámara' : '';
-    const status = AUTO.how === 'mano' ? 'Pase la mano dos veces frente a la cámara de arriba para seguir.'
+    const hand = AUTO.useCam ? ' o pase la mano una vez frente a la cámara' : '';
+    const status = AUTO.how === 'mano' ? 'Pase la mano una vez frente a la cámara de arriba para seguir.'
       : SP.state === 'playing' ? `Leyendo… Puede decir «Siguiente» o «Anterior»${hand} sin esperar.`
       : (AUTO.rec || (AUTO.vk && AUTO.vk.ready)) ? `Le escucho. Diga «Siguiente», «Anterior» o «Repetir»${hand}.` : 'Preparando el micrófono…';
     const on = AUTO.rec || (AUTO.vk && AUTO.vk.ready) || (AUTO.how === 'mano' && AUTO.cam);
@@ -1159,7 +1153,7 @@ html.modo-app, html.modo-app body { height: 100%; margin: 0; }
           </div>`).join('')}
         </div>
         ${sayBtn(PREP.map(p => p.label).join('. ') + '.')}
-        <p class="lead autonote">${I.mic}<span><b>Modo automático:</b> la app le lee cada paso. Para avanzar, diga «Siguiente» o pase la mano dos veces frente a la cámara, sin tocar el teléfono. Para volver, diga «Anterior».${voskCan() && !voskSaved() ? ' Para usar la voz sin internet, descárguela una vez en Ajustes.' : ''}</span></p>
+        <p class="lead autonote">${I.mic}<span><b>Modo automático:</b> la app le lee cada paso. Para avanzar, diga «Siguiente» o pase la mano una vez frente a la cámara, sin tocar el teléfono. Para volver, diga «Anterior».${voskCan() && !voskSaved() ? ' Para usar la voz sin internet, descárguela una vez en Ajustes.' : ''}</span></p>
       `, `<div class="stack">
         <button class="btn" data-go="step" ${all ? '' : 'disabled'}>${all ? 'Empezar los pasos' : `Faltan ${S.checks.filter(c => !c).length}`} ${I.next}</button>
         <button class="btn ghost" data-act="auto-start" ${all ? '' : 'disabled'}>${I.mic} Modo automático</button>
