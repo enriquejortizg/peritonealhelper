@@ -80,18 +80,16 @@ const NSTEPS = js.match(/const STEPS = \[([\s\S]*?)\n  \];/)[1].match(/\{ pic:/g
   click({ id: 'ob-next' });
   ok(has('¿Qué tipo de diálisis'), 'Avanza a tipo de diálisis');
   click({ id: 'ob-next' });
-  ok(has('¿Cuántos recambios al día?'), 'Avanza a recambios');
+  ok(has('¿Cuántos recambios al día?') && has('data-pick="count:4" aria-pressed="true"'), 'Avanza a recambios, con 4 por defecto');
   click({ data: { pick: 'count:3' } });
   ok(has('Recambio 3') && !has('Recambio 4'), 'Elegir 3 recambios muestra 3 horarios');
+  ok(has('data-pick="count:1"') && has('data-pick="count:4"') && !has('data-pick="count:5"'), 'Se pueden elegir de 1 a 4 recambios');
   inputs['ob-t2'] = '20:30';
   click({ id: 'ob-next' });
-  ok(has('¿De qué tamaño es la bolsa?'), 'Avanza a bolsa');
-  click({ data: { pick: 'bag:2500' } });
-  click({ id: 'ob-next' });
-  ok(has('¿A dónde llamar'), 'Avanza a teléfono');
+  ok(has('¿A dónde llamar') && !has('¿De qué tamaño es la bolsa?'), 'Avanza a teléfono sin preguntar la bolsa');
   inputs['ob-phone'] = '33 1234 5678';
   click({ id: 'ob-next' });
-  ok(has('Revise los datos') && has('Don José') && has('2,5 L') && has('20:30') && has('33 1234 5678'), 'Resumen con todos los datos');
+  ok(has('Revise los datos') && has('Don José') && has('2 L') && !has('data-edit="obBag"') && has('20:30') && has('33 1234 5678'), 'Resumen con todos los datos y la bolsa fija de 2 L');
   click({ data: { edit: 'obPatient' } });
   ok(has('¿Cómo se llama el paciente?') && has('Listo'), 'Cambiar desde el resumen');
   inputs['ob-patient'] = 'Don José Pérez';
@@ -101,7 +99,7 @@ const NSTEPS = js.match(/const STEPS = \[([\s\S]*?)\n  \];/)[1].match(/\{ pic:/g
   ok(has('Todo listo') && JSON.parse(store['dp-config']).patient === 'Don José Pérez', 'Guarda la configuración');
 
   click({ data: { act: 'practice' } });
-  ok(has('Antes de empezar') && has('MODO PRÁCTICA'), 'Práctica: lista de preparación en modo práctica');
+  ok(has('Antes de empezar') && has('Marque cada casilla') && !has('tapón nuevo y las pinzas') && has('MODO PRÁCTICA'), 'Práctica: lista de preparación en modo práctica');
   ok((appHTML.match(/data-act="prep-info"/g) || []).length === 5, 'Cada punto de preparación tiene su botón de información');
   click({ data: { act: 'prep-info', i: '3' } });
   ok(has('Para darlo por listo') && has('Limpie la mesa 1') && has('otra de repuesto'), 'El botón i muestra qué hacer para la mesa 1');
@@ -111,7 +109,7 @@ const NSTEPS = js.match(/const STEPS = \[([\s\S]*?)\n  \];/)[1].match(/\{ pic:/g
   click({ data: { go: 'step' } });
   for (let i = 0; i < NSTEPS; i++) click({ id: 'next' });
   click({ data: { aspect: 'claro' } });
-  ok(has('Líquido que salió') && attr('vol') === '2500', 'Registro propone el volumen de la bolsa (2500 ml)');
+  ok(has('Líquido que salió') && attr('vol') === '2000', 'Registro propone el volumen de la bolsa (2000 ml)');
   click({ id: 'save' });
   ok(has('¡Práctica terminada!') && JSON.parse(store['dp-log']).length === 0, 'La práctica no se anota');
   click({ data: { go: 'home' } });
@@ -130,7 +128,7 @@ const NSTEPS = js.match(/const STEPS = \[([\s\S]*?)\n  \];/)[1].match(/\{ pic:/g
   click({ data: { aspect: 'claro' } });
   click({ id: 'save' });
   const log1 = JSON.parse(store['dp-log']);
-  ok(has('¡Recambio terminado!') && log1.length === 1 && log1[0].aspect === 'claro' && log1[0].vol === 2500, 'Probar varios colores deja una sola entrada con la última opción');
+  ok(has('¡Recambio terminado!') && log1.length === 1 && log1[0].aspect === 'claro' && log1[0].vol === 2000, 'Probar varios colores deja una sola entrada con la última opción');
   click({ data: { go: 'home' } });
   ok(has('<b>1 de 3</b>'), 'Inicio: 1 de 3 recambios hoy');
   click({ data: { go: 'alarms' } });
@@ -159,10 +157,10 @@ const NSTEPS = js.match(/const STEPS = \[([\s\S]*?)\n  \];/)[1].match(/\{ pic:/g
   click({ data: { go: 'settings' } });
   click({ data: { act: 'edit' } });
   click({ data: { edit: 'obTimes' } });
-  click({ data: { pick: 'count:5' } });
+  click({ data: { pick: 'count:1' } });
   click({ id: 'ob-next' });
   click({ id: 'ob-save' });
-  ok(has('Ajustes') && JSON.parse(store['dp-config']).count === 5 && JSON.parse(store['dp-log']).length === 1, 'Editar en Ajustes conserva el registro');
+  ok(has('Ajustes') && JSON.parse(store['dp-config']).count === 1 && JSON.parse(store['dp-log']).length === 1, 'Editar en Ajustes conserva el registro');
 
   ok(has('GPL-3.0') && has('Código fuente'), 'Ajustes muestra la licencia libre y el enlace al código');
   click({ data: { act: 'reset' } });

@@ -283,7 +283,7 @@ html.modo-app, html.modo-app body { height: 100%; margin: 0; }
     <h1>Una guía de bolsillo para la diálisis peritoneal en casa</h1>
     <p>Así podría verse la app para los familiares. Funciona sin internet, no necesita servidor y nada sale del teléfono. Empieza como lo haría una familia nueva: configurando la guía con la enfermera.</p>
     <ul class="feat">
-      <li><span class="dot" data-i="gear"></span><div><b>Configuración inicial</b><span>Nombre del paciente, recambios al día y sus horarios, tamaño de la bolsa y teléfono del hospital. Una pregunta por pantalla, hecha junto con la enfermera.</span></div></li>
+      <li><span class="dot" data-i="gear"></span><div><b>Configuración inicial</b><span>Nombre del paciente, recambios al día y sus horarios, y teléfono del hospital. Una pregunta por pantalla, hecha junto con la enfermera.</span></div></li>
       <li><span class="dot" data-i="qr"></span><div><b>Código del hospital</b><span>La enfermera podría mostrar un código QR con todo configurado. En el prototipo se simula y carga datos de ejemplo.</span></div></li>
       <li><span class="dot" data-i="play"></span><div><b>Recambio de práctica</b><span>Al terminar la configuración se puede practicar un recambio completo sin que se anote en el registro.</span></div></li>
       <li><span class="dot" data-i="steps"></span><div><b>Un paso por pantalla</b><span>Dibujo grande, frase corta y botón grande de Siguiente. Hecho para personas nerviosas o con poca práctica leyendo.</span></div></li>
@@ -507,22 +507,25 @@ html.modo-app, html.modo-app body { height: 100%; margin: 0; }
   ];
   const APP_NAME = 'Diálisis Contigo';
   // Versión: PRODUCCIÓN.GRANDE.RELEASE.MENOR (ver CLAUDE.md). Debe ser igual a VERSION en sw.js.
-  const APP_VERSION = '0.0.5.1';
+  const APP_VERSION = '0.0.6.1';
 
   // ---------- Configuración de cada familia ----------
   // Se llena en la configuración inicial y se guarda solo en este teléfono.
   const DEFAULTS = { unit: 'Unidad de Diálisis Peritoneal', phone: '55 0000 0000' };
+  // En la diálisis manual la bolsa siempre es de 2 litros.
+  const BAG_ML = 2000;
   const SCHEDULES = {
+    1: ['08:00'],
+    2: ['08:00', '20:00'],
     3: ['07:00', '14:00', '21:00'],
-    4: ['07:00', '12:00', '17:00', '22:00'],
-    5: ['06:00', '10:00', '14:00', '18:00', '22:00']
+    4: ['07:00', '12:00', '17:00', '22:00']
   };
   // Lo que "traería" el código QR del hospital en la simulación.
-  const EXAMPLE = { patient: 'Rosa', carer: 'Su hija Ana', mode: 'manual', count: 4, times: SCHEDULES[4].slice(), bag: 2000, unit: DEFAULTS.unit, phone: DEFAULTS.phone };
-  const newDraft = () => ({ patient: '', carer: '', mode: 'manual', count: 4, times: SCHEDULES[4].slice(), bag: 2000, unit: DEFAULTS.unit, phone: DEFAULTS.phone });
+  const EXAMPLE = { patient: 'Rosa', carer: 'Su hija Ana', mode: 'manual', count: 4, times: SCHEDULES[4].slice(), bag: BAG_ML, unit: DEFAULTS.unit, phone: DEFAULTS.phone };
+  const newDraft = () => ({ patient: '', carer: '', mode: 'manual', count: 4, times: SCHEDULES[4].slice(), bag: BAG_ML, unit: DEFAULTS.unit, phone: DEFAULTS.phone });
   const clone = o => JSON.parse(JSON.stringify(o));
   const esc = s => String(s == null ? '' : s).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
-  function loadCfg() { try { const c = JSON.parse(localStorage.getItem('dp-config') || 'null'); return c && c.patient ? c : null; } catch (e) { return null; } }
+  function loadCfg() { try { const c = JSON.parse(localStorage.getItem('dp-config') || 'null'); if (!c || !c.patient) return null; c.bag = BAG_ML; if (!SCHEDULES[c.count]) { c.count = 4; c.times = c.times.slice(0, 4); } return c; } catch (e) { return null; } }
   function saveCfg() { try { localStorage.setItem('dp-config', JSON.stringify(CFG)); } catch (e) {} }
   let CFG = loadCfg();
 
@@ -539,7 +542,7 @@ html.modo-app, html.modo-app body { height: 100%; margin: 0; }
   const S = {
     screen: CFG ? 'home' : 'welcome', step: 0, checks: PREP.map(() => false), large: false,
     timer: null, remaining: 0, total: 0, running: false, done: false,
-    reg: { vol: 2000, peso: '' }, aspect: 'claro', alarmOpen: null,
+    reg: { vol: BAG_ML, peso: '' }, aspect: 'claro', alarmOpen: null,
     draft: newDraft(), fromSummary: false, fromQR: false, practice: false, confirmReset: false, scanT: null,
     session: null, modal: null, endAt: 0, announced: true, wake: null
   };
@@ -781,7 +784,7 @@ html.modo-app, html.modo-app body { height: 100%; margin: 0; }
       return shell('', `
         <div>
           <h2 class="scr">Hola, familia de ${esc(CFG.patient)}</h2>
-          <p class="lead">Diálisis manual · ${CFG.count} recambios al día</p>
+          <p class="lead">Diálisis manual · ${CFG.count} ${CFG.count === 1 ? 'recambio' : 'recambios'} al día</p>
         </div>
         ${nr ? `<div class="next"><small>Próximo recambio</small><span class="t">${nr.h}</span><span class="sub">${inTxt}</span></div>` : ''}
         <div class="tiles">
@@ -800,7 +803,7 @@ html.modo-app, html.modo-app body { height: 100%; margin: 0; }
       return shell('Antes de empezar', `
         <div>
           <h2 class="scr">Antes de empezar</h2>
-          <p class="lead">Toque cada cosa cuando esté lista. Si tiene dudas, toque el botón <b>i</b> para ver exactamente qué hacer.</p>
+          <p class="lead">Marque cada casilla cuando esté lista. Si tiene dudas, toque el botón <b>i</b> para ver exactamente qué hacer.</p>
         </div>
         <div class="checks">
           ${PREP.map((p, i) => `<div class="checkrow">
@@ -986,17 +989,9 @@ html.modo-app, html.modo-app body { height: 100%; margin: 0; }
     obTimes() {
       const d = S.draft;
       return obShell('obTimes', '¿Cuántos recambios al día?', `
-        <div class="seg" role="group" aria-label="Recambios al día">${[3, 4, 5].map(n => `<button data-pick="count:${n}" aria-pressed="${d.count === n}">${n}</button>`).join('')}</div>
+        <div class="seg" role="group" aria-label="Recambios al día">${[1, 2, 3, 4].map(n => `<button data-pick="count:${n}" aria-pressed="${d.count === n}">${n}</button>`).join('')}</div>
         <p class="lead">Ajuste los horarios que indicó el médico.</p>
         <div class="times">${d.times.map((t, i) => `<label class="time" for="ob-t${i}"><span>Recambio ${i + 1}</span><input type="time" id="ob-t${i}" value="${t}"></label>`).join('')}</div>`);
-    },
-
-    obBag() {
-      const d = S.draft;
-      return obShell('obBag', '¿De qué tamaño es la bolsa?', `
-        <div class="pic">${P.inspect}</div>
-        <p class="lead">Viene escrito en la bolsa, en litros.</p>
-        <div class="seg" role="group" aria-label="Tamaño de la bolsa">${[1500, 2000, 2500].map(v => `<button data-pick="bag:${v}" aria-pressed="${d.bag === v}">${(v / 1000).toLocaleString('es')} L</button>`).join('')}</div>`);
     },
 
     obUnit() {
@@ -1017,7 +1012,7 @@ html.modo-app, html.modo-app body { height: 100%; margin: 0; }
           ${row('obPatient', 'Paciente', esc(d.patient) + (d.carer ? `<br><span class="lead">Hace la diálisis: ${esc(d.carer)}</span>` : ''))}
           ${row('obMode', 'Tipo de diálisis', 'Manual, con bolsas')}
           ${row('obTimes', 'Recambios al día', `${d.count} · ${d.times.join(', ')}`)}
-          ${row('obBag', 'Tamaño de la bolsa', `${(d.bag / 1000).toLocaleString('es')} L`)}
+          <div class="srow"><span><small>Tamaño de la bolsa</small><b>${(BAG_ML / 1000).toLocaleString('es')} L</b></span></div>
           ${row('obUnit', 'Teléfono del hospital', `${esc(d.phone)}<br><span class="lead">${esc(d.unit)}</span>`)}
         </div>
       `, `${editing ? '<button class="btn ghost" data-go="settings">Cancelar</button>' : ''}<button class="btn" id="ob-save">${I.check} ${editing ? 'Guardar' : 'Guardar y terminar'}</button>`,
@@ -1059,7 +1054,7 @@ html.modo-app, html.modo-app body { height: 100%; margin: 0; }
     }
   };
 
-  const OB_STEPS = ['obPatient', 'obMode', 'obTimes', 'obBag', 'obUnit'];
+  const OB_STEPS = ['obPatient', 'obMode', 'obTimes', 'obUnit'];
   function obShell(key, title, inner, nextLabel) {
     const i = OB_STEPS.indexOf(key), n = OB_STEPS.length;
     const prev = S.fromSummary ? 'obSummary' : (i === 0 ? 'welcome' : OB_STEPS[i - 1]);

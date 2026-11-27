@@ -22,7 +22,7 @@ App para que los familiares de pacientes de un servicio de diálisis hospitalari
 
 ## Funciones actuales
 - "Antes de empezar": cada punto tiene un botón **i** que abre lo que hay que hacer para darlo por cumplido (`PREP[].items`, más `ask` para lo que hay que confirmar con la enfermera), con Escuchar y "Listo, ya lo hice".
-- Configuración inicial con la enfermera: nombre del paciente, tipo de diálisis (solo la manual; la de máquina aparece como "Próximamente"), recambios al día y horarios, tamaño de la bolsa, unidad y teléfono. Termina con un resumen y un recambio de práctica que no se anota.
+- Configuración inicial con la enfermera: nombre del paciente, tipo de diálisis (solo la manual; la de máquina aparece como "Próximamente"), recambios al día (de 1 a 4, por defecto 4) y horarios, unidad y teléfono. La bolsa de la diálisis manual siempre es de 2 L (`BAG_ML`), así que no se pregunta. Termina con un resumen y un recambio de práctica que no se anota.
 - Código QR del hospital **simulado**: no usa la cámara y carga `EXAMPLE`.
 - Recambio guiado de 29 pasos (limpieza con un paño de 5 caras, tres lavados de manos, conexión, drenaje, infusión, desconexión y pesado de la bolsa). Los pasos pueden tener subpasos (`STEPS[].items`), que se muestran como lista y se leen con Escuchar. Solo hay temporizador en los lavados de manos y en "contar hasta 5"; el drenaje y la infusión no tienen tiempo fijo porque el familiar ve cuándo terminan. Incluye aspecto del líquido, alarmas, registro, recordatorios y ajustes (incluye "Empezar de nuevo" para repetir la demostración).
 - Escuchar se lee frase por frase, con Pausar (continúa desde la frase en curso) y Detener (la próxima vez empieza desde el principio). La pausa propia del navegador no es confiable en Android.
@@ -47,7 +47,7 @@ La versión se ve junto al título de la app, en letra pequeña y gris (por ejem
 
 Va en dos lugares que deben coincidir: `APP_VERSION` en `docs/index.html` y `VERSION` en `docs/sw.js`. La prueba falla si no son iguales. Cambiar `VERSION` es lo que hace que los teléfonos descarguen la app nueva.
 
-Historial: 0.0.1 prototipo inicial · 0.0.2 configuración inicial y nombre · 0.0.3 mejoras tras probar en teléfono · 0.0.3.1 versión visible · 0.0.4.1 detalle de "Antes de empezar" · 0.0.5.1 pasos dictados por la enfermera.
+Historial: 0.0.1 prototipo inicial · 0.0.2 configuración inicial y nombre · 0.0.3 mejoras tras probar en teléfono · 0.0.3.1 versión visible · 0.0.4.1 detalle de "Antes de empezar" · 0.0.5.1 pasos dictados por la enfermera · 0.0.6.1 recambios de 1 a 4, bolsa fija de 2 L y "Marque cada casilla".
 
 ## Licencia
 Software libre bajo **GPL-3.0-or-later**, © 2026 Enrique Ortiz. El texto oficial está en `LICENSE`. Los archivos de código llevan una cabecera SPDX, y Ajustes muestra el aviso de licencia con un enlace al código fuente. Los archivos nuevos de código deben llevar la misma cabecera.
