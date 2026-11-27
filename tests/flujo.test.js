@@ -233,7 +233,7 @@ const NSTEPS = STEPS_SRC.match(/\{ pic:/g).length + (STEPS_SRC.match(/\{ title:/
   await passHand();
   ok(has('Póngase la mascarilla'), 'Pasar la mano mientras lee avanza al paso siguiente');
   let said = await finishSpeech();
-  ok(/Usted y el paciente se ponen la mascarilla/.test(said) && /pase la mano una vez frente a la cámara de arriba/.test(said) && !/diga/i.test(said), 'Lee el paso y dice que pase la mano (no que diga «Siguiente»)');
+  ok(/Usted y el paciente. Debe tapar nariz y boca/.test(said) && /pase la mano una vez frente a la cámara de arriba/.test(said) && !/diga/i.test(said), 'Lee el paso y dice que pase la mano (no que diga «Siguiente»)');
   ok(camOn() && has('Pase la mano una vez frente a la cámara'), 'Al terminar de leer, sigue mirando la cámara');
   await passHand();
   said = await finishSpeech();
