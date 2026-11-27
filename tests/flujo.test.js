@@ -24,7 +24,7 @@ const app = {
   addEventListener(t, f) { handler = f; }
 };
 global.document = {
-  hidden: false, addEventListener() {},
+  hidden: false, addEventListener(t, f) { if (t === 'visibilitychange') this.onvis = f; },
   getElementById: () => app, querySelectorAll: () => [],
   querySelector: s => (s === '.toast' ? null : { appendChild() {}, remove() {} }),
   documentElement: { style: { setProperty() {} } },
@@ -40,7 +40,8 @@ global.SpeechSynthesisUtterance = class {
 };
 global.speechSynthesis = {
   spoken: [], cur: null, getVoices: () => [],
-  speak(u) { this.spoken.push(u); this.cur = u; u.emit('start'); },
+  // block: el teléfono no deja hablar (al volver a abrir la app, antes de tocar la pantalla).
+  speak(u) { if (this.block) { this.block = false; u.emit('error', { error: 'not-allowed' }); return; } this.spoken.push(u); this.cur = u; u.emit('start'); },
   finish() { const u = this.cur; if (!u) return false; this.cur = null; u.emit('end'); return true; },
   cancel() { const u = this.cur; this.cur = null; if (u) u.emit('error', { error: 'interrupted' }); }
 };
@@ -198,7 +199,7 @@ const NSTEPS = STEPS_SRC.match(/\{ pic:/g).length + (STEPS_SRC.match(/\{ title:/
 
   // Modo automático: lee cada paso y avanza cuando el familiar dice "Siguiente", sin tocar el teléfono.
   const recs = [];
-  global.webkitSpeechRecognition = class { constructor() { recs.push(this); this.on = false; } start() { this.on = true; } abort() { this.on = false; if (this.onend) this.onend(); } stop() { this.abort(); } };
+  global.webkitSpeechRecognition = class { constructor() { recs.push(this); this.on = false; } start() { this.on = true; if (this.onstart) this.onstart(); } abort() { this.on = false; if (this.onend) this.onend(); } stop() { this.abort(); } };
   const listening = () => recs.some(r => r.on);
   // Termina de "leer" todo lo pendiente y devuelve lo que se dijo.
   const finishSpeech = async () => {
@@ -212,9 +213,12 @@ const NSTEPS = STEPS_SRC.match(/\{ pic:/g).length + (STEPS_SRC.match(/\{ title:/
   click({ data: { go: 'home' } });
   click({ data: { go: 'prep' } });
   ok(/data-act="auto-start" disabled/.test(appHTML) && has('Empezar los pasos') === false, 'Modo automático espera a que se marque todo');
-  for (let i = 0; i < 5; i++) click({ data: { check: String(i) } });
+  for (let i = 0; i < 4; i++) click({ data: { check: String(i) } });
+  ok(has('Falta 1') && !has('Faltan 1'), 'Con una casilla sin marcar dice "Falta 1"');
+  click({ data: { check: '4' } });
   ok(has('Empezar los pasos') && /data-act="auto-start" >/.test(appHTML), '"Antes de empezar" tiene Empezar los pasos y Modo automático');
   click({ data: { act: 'auto-start' } });
+  await new Promise(r => setTimeout(r, 700));   // primero enciende el micrófono, después lee
   ok(has('Paso 1 de') && has('Leyendo') && listening(), 'Modo automático: lee el primer paso y escucha a la vez');
   const nRecs = recs.length;
   hear('Lave el lavamanos con jabón siguiente');
@@ -249,6 +253,23 @@ const NSTEPS = STEPS_SRC.match(/\{ pic:/g).length + (STEPS_SRC.match(/\{ title:/
   ok(has('Primer lavado de manos') && /El reloj empieza ahora/.test(said) && has('id="t-toggle">Pausar'), 'En los pasos con reloj, el reloj arranca solo al terminar de leer');
   hear('pausa'); await finishSpeech();
   ok(has('id="t-toggle"') && !has('id="t-toggle">Pausar'), 'Decir "Pausa" detiene el reloj');
+  ok(/^Modo automático\./.test(speechSynthesis.spoken.find(u => /Lave el lavamanos/.test(u.text) || /^Modo automático/.test(u.text)).text), 'Al empezar el modo automático, lo primero que dice es "Modo automático." (no se corta el paso)');
+  // Salir de la app y volver: se calla, y al volver vuelve a escuchar y lee el paso en el que iba.
+  const setHidden = h => { document.hidden = h; document.onvis(); };
+  setHidden(true);
+  ok(!listening() && !speechSynthesis.cur, 'Al salir de la app se callan la voz y el micrófono');
+  setHidden(false);
+  await new Promise(r => setTimeout(r, 700));
+  ok(listening() && speechSynthesis.cur && speechSynthesis.cur.text === 'Seguimos en modo automático.' && has('Primer lavado de manos'), 'Al volver a la app sigue en modo automático y lee el paso en el que iba');
+  // Cerrar la app y volver a abrirla: sigue en el mismo paso y en modo automático.
+  ok(JSON.parse(store['dp-progress']).auto === true, 'Se guarda que el recambio iba en modo automático');
+  recs.forEach(r => { r.on = false; }); speechSynthesis.cur = null;
+  speechSynthesis.block = true;   // el teléfono no deja hablar hasta que se toque la pantalla
+  boot();
+  await new Promise(r => setTimeout(r, 700));
+  ok(has('Primer lavado de manos') && listening() && has('Toque una vez') && has('data-act="auto-resume"'), 'Al volver a abrir la app sigue en modo automático; si el teléfono no deja hablar, pide tocar una vez');
+  click({ data: { act: 'auto-resume' } });
+  ok(speechSynthesis.cur && speechSynthesis.cur.text === 'Seguimos en modo automático.' && has('Leyendo'), 'Al tocar "Seguir" lee el paso en el que iba');
   click({ data: { act: 'auto-exit' } });
   ok(!has('Le escucho') && !listening() && has('Primer lavado de manos'), 'Salir del modo automático deja el paso en modo táctil');
   click({ data: { act: 'home-ask' } });
