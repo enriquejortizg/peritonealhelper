@@ -23,11 +23,10 @@ La primera vez que se abre, la app pide configurarla junto con la enfermera, una
 
 1. Nombre del paciente y quién le hará la diálisis.
 2. Tipo de diálisis (en el prototipo solo está la manual; la de máquina aparece como "Próximamente").
-3. Recambios al día (3, 4 o 5) y sus horarios.
-4. Tamaño de la bolsa (1,5 L, 2 L o 2,5 L). Se usa para proponer el volumen al anotar.
-5. Nombre y teléfono de la unidad, que aparecen en las señales de alarma.
+3. Recambios al día (de 1 a 4; por defecto 4) y sus horarios.
+4. Nombre y teléfono de la unidad, que aparecen en las señales de alarma.
 
-Al final se revisa un resumen y se puede **practicar un recambio** que no se anota en el registro.
+En la diálisis manual la bolsa siempre es de 2 litros, así que no se pregunta. Al final se revisa un resumen y se puede **practicar un recambio** que no se anota en el registro.
 
 También está **Tengo un código del hospital**: en la versión real la enfermera mostraría un código QR con todo configurado. En el prototipo no usa la cámara: simula la lectura y carga datos de ejemplo.
 
