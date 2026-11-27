@@ -32,11 +32,17 @@ global.document = {
 };
 global.window = global; global.navigator = {};
 // Voz simulada: guarda lo que se pide leer; cancel() avisa "interrupted" como el navegador.
-global.SpeechSynthesisUtterance = class { constructor(t) { this.text = t; } };
+// Avisa "start" al empezar y "end" al terminar (finish), con la propiedad onend y con addEventListener.
+global.SpeechSynthesisUtterance = class {
+  constructor(t) { this.text = t; this.ls = {}; }
+  addEventListener(t, f) { (this.ls[t] = this.ls[t] || []).push(f); }
+  emit(t, e) { const p = this['on' + t]; if (p) p(e); (this.ls[t] || []).forEach(f => f(e)); }
+};
 global.speechSynthesis = {
   spoken: [], cur: null, getVoices: () => [],
-  speak(u) { this.spoken.push(u); this.cur = u; },
-  cancel() { const u = this.cur; this.cur = null; if (u && u.onerror) u.onerror({ error: 'interrupted' }); }
+  speak(u) { this.spoken.push(u); this.cur = u; u.emit('start'); },
+  finish() { const u = this.cur; if (!u) return false; this.cur = null; u.emit('end'); return true; },
+  cancel() { const u = this.cur; this.cur = null; if (u) u.emit('error', { error: 'interrupted' }); }
 };
 // Simula abrir la app (o volver a abrirla) con lo que haya guardado en el teléfono.
 const boot = () => eval(js);
@@ -63,7 +69,7 @@ const NSTEPS = STEPS_SRC.match(/\{ pic:/g).length + (STEPS_SRC.match(/\{ title:/
   const ss = speechSynthesis, sayText = () => appHTML.match(/data-say="([^"]*)"/)[1];
   click({ data: { say: sayText() } });
   ok(has('Pausar') && has('Detener') && ss.cur.text === 'Bienvenidos.', 'Escuchar empieza a leer y muestra Pausar y Detener');
-  ss.cur.onend();
+  ss.finish();
   ok(ss.cur.text.startsWith('Esta guía'), 'Lee la frase siguiente');
   click({ data: { say: sayText() } });
   ok(has('Continuar') && ss.cur === null, 'Pausar calla la voz y ofrece Continuar');
@@ -197,11 +203,12 @@ const NSTEPS = STEPS_SRC.match(/\{ pic:/g).length + (STEPS_SRC.match(/\{ title:/
   // Termina de "leer" todo lo pendiente y devuelve lo que se dijo.
   const finishSpeech = async () => {
     const from = speechSynthesis.spoken.length - (speechSynthesis.cur ? 1 : 0);
-    for (let k = 0; k < 200; k++) { const u = speechSynthesis.cur; if (!u) break; speechSynthesis.cur = null; if (u.onend) u.onend(); }
+    for (let k = 0; k < 200; k++) if (!speechSynthesis.finish()) break;
     await new Promise(r => setTimeout(r, 300));
     return speechSynthesis.spoken.slice(from).map(u => u.text).join(' ');
   };
-  const hear = t => { const r = recs.filter(x => x.on).pop(); if (!r) return; const res = [{ transcript: t }]; res.isFinal = true; r.onresult({ resultIndex: 0, results: [res] }); };
+  // Como Chrome con continuous: cada frase oída es un resultado nuevo que se suma a la lista.
+  const hear = t => { const r = recs.filter(x => x.on).pop(); if (!r) return; const res = [{ transcript: t }]; res.isFinal = true; r.list = (r.list || []).concat([res]); r.onresult({ resultIndex: r.list.length - 1, results: r.list }); };
   click({ data: { go: 'home' } });
   click({ data: { go: 'prep' } });
   ok(/data-act="auto-start" disabled/.test(appHTML) && has('Empezar los pasos') === false, 'Modo automático espera a que se marque todo');
@@ -209,8 +216,17 @@ const NSTEPS = STEPS_SRC.match(/\{ pic:/g).length + (STEPS_SRC.match(/\{ title:/
   ok(has('Empezar los pasos') && /data-act="auto-start" >/.test(appHTML), '"Antes de empezar" tiene Empezar los pasos y Modo automático');
   click({ data: { act: 'auto-start' } });
   ok(has('Paso 1 de') && has('Leyendo') && listening(), 'Modo automático: lee el primer paso y escucha a la vez');
+  const nRecs = recs.length;
   hear('Lave el lavamanos con jabón siguiente');
   ok(has('Póngase la mascarilla'), 'Se puede decir "Siguiente" sin esperar, aunque el reconocedor lo junte con lo que lee la app');
+  ok(recs.length === nRecs && listening(), 'Después de una orden sigue escuchando con el mismo reconocedor, sin volver a empezar (sin pitido)');
+  await finishSpeech();
+  hear('cuando esté listo diga siguiente o pase la mano una vez frente a la cámara');
+  ok(has('Póngase la mascarilla') && !speechSynthesis.cur, 'El eco de "diga Siguiente" no cuenta como orden ni hace decir "No le entendí"');
+  hear('diga siguiente o pase la mano siguiente');
+  ok(has('Primer lavado de manos'), 'Decir "Siguiente" justo después de que la app dice "diga Siguiente" sí avanza');
+  hear('anterior');
+  ok(has('Póngase la mascarilla'), '"Anterior" vuelve al paso de la mascarilla');
   hear('Usted y el paciente se ponen la mascarilla');
   ok(has('Póngase la mascarilla'), 'Lo que la app lee no cuenta como orden');
   let said = await finishSpeech();

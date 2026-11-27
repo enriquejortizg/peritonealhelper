@@ -546,7 +546,7 @@ html.modo-app, html.modo-app body { height: 100%; margin: 0; }
   ];
   const APP_NAME = 'Diálisis Contigo';
   // Versión: PRODUCCIÓN.GRANDE.RELEASE.MENOR (ver CLAUDE.md). Debe ser igual a VERSION en sw.js.
-  const APP_VERSION = '0.0.9.1';
+  const APP_VERSION = '0.0.10.1';
 
   // ---------- Configuración de cada familia ----------
   // Se llena en la configuración inicial y se guarda solo en este teléfono.
@@ -620,7 +620,7 @@ html.modo-app, html.modo-app body { height: 100%; margin: 0; }
   // El texto se lee frase por frase: así "Pausar" puede continuar después desde la frase en curso.
   // (La pausa propia del navegador no es confiable en Android.)
   // done: qué hacer al terminar de leer todo (lo usa el modo automático para volver a escuchar).
-  const SP = { key: null, parts: [], idx: 0, state: 'idle', done: null, echoText: '', echoUntil: 0 };
+  const SP = { key: null, parts: [], idx: 0, state: 'idle', done: null };
   const canSpeak = () => { try { return !!window.speechSynthesis && typeof SpeechSynthesisUtterance !== 'undefined'; } catch (e) { return false; } };
   function utter(text) {
     const u = new SpeechSynthesisUtterance(text);
@@ -636,6 +636,17 @@ html.modo-app, html.modo-app body { height: 100%; margin: 0; }
     u.onend = () => { if (SP.state !== 'playing' || SP.key !== key || SP.idx !== idx) return; SP.idx++; speakNext(); };
     // Si la voz falla, se sigue igual (el modo automático vuelve a escuchar aunque no se haya podido leer).
     u.onerror = e => { if (e && e.error !== 'interrupted' && e.error !== 'canceled' && SP.state === 'playing' && SP.key === key) { const cb = SP.done; sayStop(); if (cb) cb(); } };
+    sayU(u);
+  }
+  // Toda frase que dice la app queda anotada (SAID), para no confundir su eco con una orden.
+  function sayU(u) {
+    const r = saidAdd(u.text), onend = u.onend;
+    // El final se anota antes que nada: al terminar la última frase, onend llama a stopSpeak.
+    u.onend = e => { saidEnd(r); if (onend) onend.call(u, e); };
+    if (u.addEventListener) {
+      u.addEventListener('start', () => { if (!r.cut) r.start = Date.now(); });
+      u.addEventListener('boundary', e => saidMark(r, e && e.charIndex));
+    }
     speechSynthesis.speak(u);
   }
   // Escuchar → Pausar → Continuar (desde donde iba). Detener → la próxima vez empieza desde el principio.
@@ -655,9 +666,9 @@ html.modo-app, html.modo-app body { height: 100%; margin: 0; }
   }
   function sayStop() { stopSpeak(); render(); }
   function stopSpeak() {
-    if (SP.parts.length) { SP.echoText = SP.parts.slice(Math.max(0, SP.idx - 1), SP.idx + 2).join(' '); SP.echoUntil = Date.now() + 800; }
+    saidCut();
     Object.assign(SP, { key: null, parts: [], idx: 0, state: 'idle', done: null }); try { speechSynthesis.cancel(); } catch (e) {} }
-  function announce(text) { stopSpeak(); if (!canSpeak()) return; try { speechSynthesis.speak(utter(text)); } catch (e) {} }
+  function announce(text) { stopSpeak(); if (!canSpeak()) return; try { sayU(utter(text)); } catch (e) {} }
   function sayBtn(text) {
     if (SP.key === text && SP.state !== 'idle') return `<div class="say">
       <button class="listen ${SP.state === 'playing' ? 'speaking' : ''}" data-say="${esc(text)}">${SP.state === 'playing' ? I.pause + 'Pausar' : I.play + 'Continuar'}</button>
@@ -814,29 +825,88 @@ html.modo-app, html.modo-app body { height: 100%; margin: 0; }
   ];
   const norm = t => String(t).toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g, '').replace(/[^a-zñ ]/g, ' ').replace(/\s+/g, ' ').trim();
   function matchCmd(t) { const n = norm(t); const c = COMMANDS.find(([, re]) => re.test(n)); return c ? c[0] : null; }
-  // Mientras la app lee, el micrófono también oye al teléfono, y el reconocedor puede juntar en un mismo
-  // resultado lo que dice la app y lo que dice la persona ("…de nuevo con jabón siguiente").
-  // Por eso, mientras lee, se busca la última orden que NO esté en la frase actual ni en sus vecinas.
-  function recentSpeech() {
-    if (SP.state === 'playing') return [SP.parts[SP.idx - 1], SP.parts[SP.idx], SP.parts[SP.idx + 1]].filter(Boolean).join(' ');
-    return Date.now() < SP.echoUntil ? SP.echoText : '';
+  // ---------- Eco: separar lo que dice la app de lo que dice la persona ----------
+  // Mientras la app lee, el micrófono también oye al teléfono, y el reconocedor junta en un mismo
+  // resultado lo que dice la app y lo que dice la persona ("…diga siguiente o pase la mano siguiente").
+  // Por eso se anota cada frase que dice la app (SAID) con la hora aproximada de cada palabra, y lo oído
+  // se alinea con lo que la app ya dijo. Una orden cuenta solo si no se explica como eco: si sobra, o si
+  // llega sola (sin las palabras de la app que la rodean) y la app no la acaba de decir.
+  // Así funciona aunque la propia app diga "diga Siguiente" o "el reloj", y también con Vosk, que solo
+  // escribe las palabras de las órdenes y "[unk]" en lugar de las demás.
+  const SAID = [];
+  const PAIRS = [['otra', 'vez'], ['de', 'nuevo']];
+  // Palabras normalizadas; "otra vez" y "de nuevo" quedan como una sola. keepUnk deja los "[unk]" de Vosk.
+  function toks(t, keepUnk) {
+    const w = norm(t).split(' ').filter(x => x && (keepUnk || x !== 'unk')), out = [];
+    for (let i = 0; i < w.length; i++) {
+      const p = PAIRS.find(([a, b]) => w[i] === a && w[i + 1] === b);
+      if (p) { out.push(p.join(' ')); i++; } else out.push(w[i]);
+    }
+    return out;
   }
-  function pickCmd(t) {
-    const w = norm(t).split(' ').filter(Boolean), said = norm(recentSpeech()).split(' ');
-    // Justo después de callarse, el eco llega como la frase completa ("cuando esté listo diga siguiente").
-    // Una orden sola ("siguiente") sí es de la persona.
-    if (SP.state !== 'playing') {
-      if (w.length >= 2 && w.every(x => said.includes(x))) return null;
-      for (let i = w.length - 1; i >= 0; i--) { const c = matchCmd(w[i]) || (i > 0 && matchCmd(w[i - 1] + ' ' + w[i])); if (c) return c; }
-      return null;
+  function saidAdd(text) {
+    const now = Date.now();
+    if (SAID.length > 40) SAID.shift();
+    const r = { text: String(text), w: toks(text), start: now, end: 0, cut: 0, b: -1, tb: 0 };
+    SAID.push(r); return r;
+  }
+  // Evento "boundary": la palabra que empieza a decir ahora (no todos los teléfonos lo mandan).
+  function saidMark(r, ch) { if (r.end || r.cut || typeof ch !== 'number') return; r.b = toks(r.text.slice(0, ch)).length; r.tb = Date.now(); }
+  function saidEnd(r) { if (!r.end && !r.cut) r.end = Date.now(); }
+  function saidCut() { const now = Date.now(); SAID.forEach(r => { if (!r.end && !r.cut) r.cut = now; }); }
+  // Cuándo pudo decirse la palabra i: lo antes posible (lo) y lo más tarde (hi).
+  // Sin más datos se supone entre 0,28 y 0,6 segundos por palabra; al terminar la frase se reparte su duración.
+  function saidWhen(r, i) {
+    if (r.end) { const t = r.start + (r.end - r.start) * (i + .5) / r.w.length; return [t - 400, t + 400]; }
+    let lo = r.start + i * 280, hi = r.start + 600 + i * 600;
+    if (r.b >= 0) { if (i < r.b) hi = Math.min(hi, r.tb); else lo = Math.max(lo, r.tb); }
+    if (r.cut) hi = Math.min(hi, r.cut);
+    return [lo, hi];
+  }
+  // Lo que la app pudo haber dicho en el último minuto, en orden.
+  function saidCtx(now) {
+    const c = [];
+    SAID.forEach(r => r.w.forEach((w, i) => {
+      const [lo, hi] = saidWhen(r, i);
+      if (lo <= now + 200 && hi >= now - 60000 && !(r.cut && lo > r.cut)) c.push({ w, mid: (lo + hi) / 2 });
+    }));
+    return c;
+  }
+  // Analiza un resultado del reconocedor (que va creciendo mientras se habla). skip: cuántas órdenes del
+  // principio ya se usaron. seen (Vosk): a qué hora apareció cada orden en los resultados parciales.
+  // Devuelve la última orden de la persona (cmd), cuántas órdenes trae el resultado (n) y si es casi todo eco (echo).
+  function hearCmd(t, skip, seen) {
+    const raw = toks(t, true), T = [], ri = [];
+    raw.forEach((w, i) => { if (w !== 'unk') { T.push(w); ri.push(i); } });
+    const now = Date.now(), C = saidCtx(now), n = T.length, m = C.length;
+    // Alineación más larga entre lo oído y lo dicho (subsecuencia común más larga), armada desde el final:
+    // si hay empate, cada palabra oída se une a lo más reciente que dijo la app, que es lo que se oyó como eco.
+    const L = Array.from({ length: n + 1 }, () => new Int16Array(m + 1));
+    for (let i = 1; i <= n; i++) for (let j = 1; j <= m; j++) L[i][j] = T[i - 1] === C[j - 1].w ? L[i - 1][j - 1] + 1 : Math.max(L[i - 1][j], L[i][j - 1]);
+    const at = new Array(n).fill(-1);
+    for (let i = n, j = m; i > 0 && j > 0;) {
+      if (T[i - 1] === C[j - 1].w && L[i][j] === L[i - 1][j - 1] + 1) { at[i - 1] = j - 1; i--; j--; }
+      else if (L[i][j - 1] >= L[i - 1][j]) j--; else i--;
     }
-    for (let i = w.length - 1; i >= 0; i--) {
-      const two = i > 0 ? w[i - 1] + ' ' + w[i] : '';
-      const c2 = two && matchCmd(two), c1 = matchCmd(w[i]);
-      if (c2 && !norm(recentSpeech()).includes(two)) return c2;
-      if (c1 && !said.includes(w[i])) return c1;
+    const near = (i, k) => k >= 0 && k < n && at[k] >= 0 && Math.abs(at[k] - at[i]) <= 2;
+    let cnt = 0, cmd = null, echoW = 0;
+    for (let i = 0; i < n; i++) {
+      if (at[i] >= 0) echoW++;
+      const c = matchCmd(T[i]); if (!c) continue;
+      ++cnt; if (seen && !seen[cnt]) seen[cnt] = now;
+      if (cnt <= (skip || 0)) continue;
+      // Si no coincide con nada de lo dicho (sobra), es de la persona.
+      if (at[i] >= 0) {
+        // Eco: coincide con lo dicho y viene junto a otras palabras de la app.
+        if (near(i, i - 1) || near(i, i + 1) || near(i, i - 2) || near(i, i + 2)) continue;
+        // Con Vosk, que escribe "[unk]" en lugar de las demás palabras, el eco de una orden suele llegar solo.
+        // Es eco si viene junto a un "[unk]" y la app dijo esa palabra justo antes de que apareciera en los resultados.
+        const k = ri[i], heardAt = seen ? seen[cnt] : now - (raw.length - 1 - k) * 450;
+        if ((raw[k - 1] === 'unk' || raw[k + 1] === 'unk') && C.some(x => x.w === T[i] && x.mid >= heardAt - 3000 && x.mid <= heardAt + 800)) continue;
+      }
+      cmd = c;
     }
-    return null;
+    return { cmd, n: cnt, echo: n > 0 && echoW * 2 >= n };
   }
   const recLang = () => { const l = (navigator.language || ''); return /^es/i.test(l) ? l : 'es-MX'; };
   const autoHint = () => AUTO.how === 'mano' ? 'Cuando esté listo, pase la mano una vez frente a la cámara de arriba.' : 'Cuando esté listo, diga Siguiente o pase la mano una vez frente a la cámara.';
@@ -879,17 +949,19 @@ html.modo-app, html.modo-app body { height: 100%; margin: 0; }
   // Escucha continua con Vosk: no se corta entre pasos, así no hay pitidos ni pausas.
   function voskStart() {
     if (AUTO.vk) return;
-    const vk = AUTO.vk = { lock: false };
+    const vk = AUTO.vk = { skip: 0, seen: [] };
     voskModel().then(model => navigator.mediaDevices.getUserMedia({ audio: { echoCancellation: true, noiseSuppression: true, channelCount: 1 }, video: false })
       .then(stream => {
         if (!AUTO.on || AUTO.vk !== vk) { stream.getTracks().forEach(t => t.stop()); return; }
         const ctx = new (window.AudioContext || window.webkitAudioContext)();
         const rec = new model.KaldiRecognizer(ctx.sampleRate, JSON.stringify(VOSK_WORDS));
         // Mientras dura una misma frase, "siguiente" aparece en varios resultados parciales: cuenta una sola vez.
+        // Se recuerda cuántas órdenes ya se usaron (skip) y solo cuentan las nuevas. Así, si la app sigue
+        // leyendo sin pausa y Vosk no cierra la frase, se puede volver a decir "Siguiente" en el paso nuevo.
         const heard = (text, final) => {
-          const c = text && pickCmd(text);
-          if (c && !vk.lock) { vk.lock = true; autoCmd(c); }
-          if (final) vk.lock = false;
+          const h = text ? hearCmd(text, vk.skip, vk.seen) : null;
+          if (h && h.cmd) { vk.skip = h.n; autoCmd(h.cmd); }
+          if (final) { vk.skip = 0; vk.seen = []; }
         };
         rec.on('partialresult', m => heard(m && m.result && m.result.partial, false));
         rec.on('result', m => heard(m && m.result && m.result.text, true));
@@ -972,16 +1044,20 @@ html.modo-app, html.modo-app body { height: 100%; margin: 0; }
     const R = Rec(); if (!R) { toHand(); return; }
     const r = new R();
     r.lang = recLang(); r.continuous = true; r.interimResults = true; r.maxAlternatives = 3;
+    // El reconocedor sigue escuchando después de una orden (sin el pitido de volver a empezar). El resultado
+    // que traía la orden ya no cuenta, aunque siga creciendo con lo que lee la app en el paso nuevo.
+    r.used = -1;
     r.onresult = e => {
-      for (let i = e.resultIndex || 0; i < e.results.length; i++) {
+      for (let i = Math.max(e.resultIndex || 0, r.used + 1); i < e.results.length; i++) {
         const res = e.results[i];
+        let first = null;
         for (let j = 0; j < res.length; j++) {
-          const c = pickCmd(res[j].transcript);
-          if (c) { AUTO.fails = []; stopListen(); autoCmd(c); return; }
+          const h = hearCmd(res[j].transcript); if (!first) first = h;
+          if (h.cmd) { AUTO.fails = []; r.used = i; autoCmd(h.cmd); return; }
         }
         // Algo se dijo, pero no es una orden: se avisa como mucho cada 20 segundos (ruido de la casa).
-        // Mientras la app lee no se avisa, porque lo más probable es que se oiga a sí misma.
-        if (res.isFinal && SP.state !== 'playing' && String(res[0].transcript).trim() && Date.now() - AUTO.lastMiss > 20000) {
+        // No se avisa mientras la app lee ni si lo oído es casi todo eco de lo que la app acaba de decir.
+        if (res.isFinal && SP.state !== 'playing' && first && !first.echo && String(res[0].transcript).trim() && Date.now() - AUTO.lastMiss > 20000) {
           AUTO.lastMiss = Date.now();
           autoSay('No le entendí. Diga Siguiente, Anterior o Repetir.'); return;
         }
