@@ -46,7 +46,9 @@ const click = (o) => handler({ target: { id: o.id || '', dataset: o.data || {}, 
 let fails = 0;
 const ok = (cond, msg) => { console.log((cond ? 'OK   ' : 'FALLA') + ' ' + msg); if (!cond) fails++; };
 const has = s => appHTML.includes(s);
-const NSTEPS = js.match(/const STEPS = \[([\s\S]*?)\n  \];/)[1].match(/\{ pic:/g).length;
+const STEPS_SRC = js.match(/const STEPS = \[([\s\S]*?)\n  \];/)[1];
+// Pantallas del recambio: una por paso y una por cada subpaso con pantalla propia.
+const NSTEPS = STEPS_SRC.match(/\{ pic:/g).length + (STEPS_SRC.match(/\{ title:/g) || []).length;
 
 (async () => {
   ok(has('Bienvenidos'), 'Primera vez: pantalla de bienvenida');
@@ -141,11 +143,20 @@ const NSTEPS = js.match(/const STEPS = \[([\s\S]*?)\n  \];/)[1].match(/\{ pic:/g
   click({ data: { go: 'step' } });
   for (let i = 0; i < 14; i++) click({ id: 'next' });
   ok(has('Lavado de manos quirúrgico') && has('data-act="home-ask"'), 'Durante el recambio, Inicio pide confirmación');
-  ok(has('class="substeps"') && has('<li>Palma con palma.</li>') && /data-say="[^"]*Palma con palma/.test(appHTML), 'Los subpasos se muestran en lista y se leen con Escuchar');
+  ok(has('class="substeps"') && has('<li>Palma con palma</li>') && has('Son 8 movimientos'), 'El paso con subpasos muestra primero el resumen');
   click({ id: 't-toggle' });
+  click({ id: 'next' });
+  ok(has('Movimiento 1 de 8') && has('<h2 class="scr">Palma con palma</h2>') && /data-say="Movimiento 1 de 8. Palma con palma/.test(appHTML), 'Cada subpaso tiene su pantalla y se lee con Escuchar');
+  ok(has('id="t-toggle">Pausar'), 'El reloj del paso sigue corriendo en los subpasos');
+  click({ id: 'next' });
+  ok(has('Movimiento 2 de 8') && has('id="t-toggle">Pausar'), 'Siguiente pasa al otro subpaso sin reiniciar el reloj');
+  click({ id: 'prev' });
+  click({ id: 'prev' });
+  ok(has('Son 8 movimientos') && !has('Movimiento 1 de 8'), 'Atrás vuelve del subpaso al resumen del paso');
+  click({ id: 'next' });
   ok(JSON.parse(store['dp-progress']).timer.running, 'Se guarda el progreso con el reloj corriendo');
   boot();
-  ok(has('Lavado de manos quirúrgico') && has('id="t-toggle">Pausar') && toastMsg.includes('Continuamos'), 'Al reabrir la app sigue en el mismo paso con el reloj corriendo');
+  ok(has('Lavado de manos quirúrgico') && has('Movimiento 1 de 8') && has('id="t-toggle">Pausar') && toastMsg.includes('Continuamos'), 'Al reabrir la app sigue en el mismo subpaso con el reloj corriendo');
   click({ data: { act: 'home-ask' } });
   ok(has('¿Volver al inicio?') && has('se perderá el progreso'), 'Inicio muestra la confirmación');
   click({ data: { act: 'modal-close' } });
@@ -174,6 +185,50 @@ const NSTEPS = js.match(/const STEPS = \[([\s\S]*?)\n  \];/)[1].match(/\{ pic:/g
   ok(has('Código leído') && has('Rosa'), 'El código simulado carga la configuración de ejemplo');
   click({ id: 'ob-save' });
   ok(has('Todo listo'), 'Guardar desde el código termina la configuración');
+
+  // Modo automático: lee cada paso y avanza cuando el familiar dice "Siguiente", sin tocar el teléfono.
+  const recs = [];
+  global.webkitSpeechRecognition = class { constructor() { recs.push(this); this.on = false; } start() { this.on = true; } abort() { this.on = false; if (this.onend) this.onend(); } stop() { this.abort(); } };
+  const listening = () => recs.some(r => r.on);
+  // Termina de "leer" todo lo pendiente y devuelve lo que se dijo.
+  const finishSpeech = async () => {
+    const from = speechSynthesis.spoken.length - (speechSynthesis.cur ? 1 : 0);
+    for (let k = 0; k < 200; k++) { const u = speechSynthesis.cur; if (!u) break; speechSynthesis.cur = null; if (u.onend) u.onend(); }
+    await new Promise(r => setTimeout(r, 300));
+    return speechSynthesis.spoken.slice(from).map(u => u.text).join(' ');
+  };
+  const hear = t => { const r = recs.filter(x => x.on).pop(); if (!r) return; const res = [{ transcript: t }]; res.isFinal = true; r.onresult({ resultIndex: 0, results: [res] }); };
+  click({ data: { go: 'home' } });
+  click({ data: { go: 'prep' } });
+  ok(/data-act="auto-start" disabled/.test(appHTML) && has('Empezar los pasos') === false, 'Modo automático espera a que se marque todo');
+  for (let i = 0; i < 5; i++) click({ data: { check: String(i) } });
+  ok(has('Empezar los pasos') && /data-act="auto-start" >/.test(appHTML), '"Antes de empezar" tiene Empezar los pasos y Modo automático');
+  click({ data: { act: 'auto-start' } });
+  ok(has('Paso 1 de') && has('Leyendo el paso') && !listening(), 'Modo automático: lee el primer paso con el micrófono apagado');
+  let said = await finishSpeech();
+  ok(/Lave el lavamanos/.test(said) && /diga Siguiente/.test(said) && listening() && has('Le escucho'), 'Al terminar de leer, escucha');
+  hear('Siguiente');
+  ok(has('Póngase la mascarilla') && !listening(), 'Decir "Siguiente" pasa al otro paso');
+  said = await finishSpeech();
+  ok(/Usted y el paciente se ponen la mascarilla/.test(said), 'Lee el paso nuevo sin tocar nada');
+  hear('atrás');
+  await finishSpeech();
+  ok(has('Lave el lavamanos'), 'Decir "Atrás" vuelve al paso anterior');
+  hear('la tele está prendida');
+  said = await finishSpeech();
+  ok(/No le entendí/.test(said) && has('Lave el lavamanos'), 'Si no entiende, lo dice y no avanza');
+  hear('repita');
+  said = await finishSpeech();
+  ok(/Lave el lavamanos con jabón/.test(said), 'Decir "Repetir" vuelve a leer el paso');
+  hear('siguiente'); await finishSpeech(); hear('listo');
+  said = await finishSpeech();
+  ok(has('Primer lavado de manos') && /El reloj empieza ahora/.test(said) && has('id="t-toggle">Pausar'), 'En los pasos con reloj, el reloj arranca solo al terminar de leer');
+  hear('pausa'); await finishSpeech();
+  ok(has('id="t-toggle"') && !has('id="t-toggle">Pausar'), 'Decir "Pausa" detiene el reloj');
+  click({ data: { act: 'auto-exit' } });
+  ok(!has('Le escucho') && !listening() && has('Primer lavado de manos'), 'Salir del modo automático deja el paso en modo táctil');
+  click({ data: { act: 'home-ask' } });
+  click({ data: { act: 'home-yes' } });
 
   console.log(fails ? `\n${fails} fallas` : '\nTodo bien');
   process.exit(fails ? 1 : 0);
