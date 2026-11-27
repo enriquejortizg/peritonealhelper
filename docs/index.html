@@ -317,7 +317,7 @@ html.modo-app, html.modo-app body { height: 100%; margin: 0; }
       <li><span class="dot" data-i="play"></span><div><b>Recambio de práctica</b><span>Al terminar la configuración se puede practicar un recambio completo sin que se anote en el registro.</span></div></li>
       <li><span class="dot" data-i="steps"></span><div><b>Un paso por pantalla</b><span>Dibujo grande, frase corta y botón grande de Siguiente. Hecho para personas nerviosas o con poca práctica leyendo.</span></div></li>
       <li><span class="dot" data-i="speaker"></span><div><b>Cada paso se escucha</b><span>El botón Escuchar lee el paso en voz alta. En la versión real se usarían audios grabados por las enfermeras del servicio.</span></div></li>
-      <li><span class="dot" data-i="mic"></span><div><b>Modo automático</b><span>Con las manos ya lavadas, la app lee cada paso y avanza cuando el familiar dice «Siguiente». Si no hay voz, se tapa la cámara con la mano.</span></div></li>
+      <li><span class="dot" data-i="mic"></span><div><b>Modo automático</b><span>Con las manos ya lavadas, la app lee cada paso y avanza cuando el familiar dice «Siguiente» o pasa la mano frente a la cámara, incluso sin esperar a que termine de leer.</span></div></li>
       <li><span class="dot" data-i="clock"></span><div><b>Temporizadores</b><span>Lavado de manos, drenaje e infusión llevan su propio reloj con aviso al terminar. Hay un botón para adelantarlo en la demostración.</span></div></li>
       <li><span class="dot" data-i="alert"></span><div><b>Señales de alarma</b><span>Si el líquido sale turbio o con sangre, la app lo indica y muestra el teléfono que se configuró.</span></div></li>
       <li><span class="dot" data-i="list"></span><div><b>Registro y recordatorios</b><span>Hora, volumen drenado y aspecto del líquido, guardados en el teléfono. Los horarios salen de la configuración.</span></div></li>
@@ -559,7 +559,7 @@ html.modo-app, html.modo-app body { height: 100%; margin: 0; }
   ];
   const APP_NAME = 'Diálisis Contigo';
   // Versión: PRODUCCIÓN.GRANDE.RELEASE.MENOR (ver CLAUDE.md). Debe ser igual a VERSION en sw.js.
-  const APP_VERSION = '0.0.7.1';
+  const APP_VERSION = '0.0.8.1';
 
   // ---------- Configuración de cada familia ----------
   // Se llena en la configuración inicial y se guarda solo en este teléfono.
@@ -656,11 +656,10 @@ html.modo-app, html.modo-app body { height: 100%; margin: 0; }
     if (!canSpeak()) { toast('Este teléfono no puede leer en voz alta. En la app real se usarán audios grabados.'); return; }
     if (SP.key === text && SP.state === 'playing') { SP.state = 'paused'; speechSynthesis.cancel(); }
     else if (SP.key === text && SP.state === 'paused') { SP.state = 'playing'; speakNext(); }
-    else { speakParts(text, AUTO.on ? autoListen : null); return; }
+    else { speakParts(text, null); return; }
     render();
   }
   function speakParts(text, done) {
-    stopListen();
     if (!canSpeak()) { render(); if (done) done(); return; }
     try { speechSynthesis.cancel(); } catch (e) {}
     Object.assign(SP, { key: text, parts: String(text).split(/(?<=[.!?])\s+/).map(s => s.trim()).filter(Boolean), idx: 0, state: 'playing', done: done || null });
@@ -811,11 +810,12 @@ html.modo-app, html.modo-app body { height: 100%; margin: 0; }
 
   // ---------- Modo automático ----------
   // Para cuando el familiar ya tiene las manos lavadas y no puede tocar el teléfono:
-  // la app lee cada paso y espera a que diga "Siguiente". Si el teléfono no puede reconocer la voz
-  // (sin internet, sin permiso o sin soporte), se sigue tapando la cámara de adelante con la mano.
-  // El micrófono se apaga mientras la app habla, para que no se oiga a sí misma.
-  const AUTO = { on: false, how: null, rec: null, want: false, fails: [], lastMiss: 0, cam: null, camWant: false };
+  // la app lee cada paso y avanza cuando la persona dice "Siguiente" o pasa la mano frente a la cámara
+  // de adelante. Se puede hablar o pasar la mano también mientras la app está leyendo.
+  // Si el teléfono no puede reconocer la voz (sin internet, sin permiso o sin soporte), queda la mano.
+  const AUTO = { on: false, how: null, rec: null, want: false, fails: [], lastMiss: 0, cam: null, camWant: false, lastCmd: 0 };
   const Rec = () => window.SpeechRecognition || window.webkitSpeechRecognition;
+  const hasCam = () => !!(navigator.mediaDevices && navigator.mediaDevices.getUserMedia);
   const COMMANDS = [
     ['next', /\b(siguiente|listo|lista|continuar|continue|adelante|avanzar)\b/],
     ['repeat', /\b(repetir|repita|repite|otra vez|de nuevo)\b/],
@@ -823,25 +823,34 @@ html.modo-app, html.modo-app body { height: 100%; margin: 0; }
     ['pause', /\b(pausa|pausar|espere|alto)\b/],
     ['start', /\b(iniciar|inicia|empezar|reanudar|reloj)\b/]
   ];
-  const norm = t => String(t).toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g, '');
+  const norm = t => String(t).toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g, '').replace(/[^a-zñ ]/g, ' ').replace(/\s+/g, ' ').trim();
   function matchCmd(t) { const n = norm(t); const c = COMMANDS.find(([, re]) => re.test(n)); return c ? c[0] : null; }
+  // Mientras la app lee, el micrófono también oye al teléfono. Se acepta una orden solo si es corta
+  // (una o dos palabras) y si la frase que se está leyendo no la contiene: así la app no se "oye" a sí misma.
+  function echoOf(t) {
+    if (SP.state !== 'playing') return false;
+    const n = norm(t);
+    if (n.split(' ').length > 2) return true;
+    const near = norm([SP.parts[SP.idx - 1], SP.parts[SP.idx], SP.parts[SP.idx + 1]].filter(Boolean).join(' '));
+    return n.split(' ').some(w => w.length > 2 && near.split(' ').includes(w));
+  }
   const recLang = () => { const l = (navigator.language || ''); return /^es/i.test(l) ? l : 'es-MX'; };
-  const autoHint = () => AUTO.how === 'mano' ? 'Cuando esté listo, tape la cámara de arriba con la mano.' : 'Cuando esté listo, diga Siguiente.';
+  const autoHint = () => AUTO.how === 'mano' ? 'Cuando esté listo, pase la mano frente a la cámara de arriba.' : 'Cuando esté listo, diga Siguiente o pase la mano frente a la cámara.';
 
   function autoStart() {
     const voice = !!Rec() && navigator.onLine !== false;
-    const md = navigator.mediaDevices && navigator.mediaDevices.getUserMedia ? navigator.mediaDevices : null;
+    const md = hasCam() ? navigator.mediaDevices : null;
     if (!voice && !md) { toast('Este teléfono no permite el modo automático. Use "Empezar los pasos".'); return; }
-    const begin = how => {
-      AUTO.on = true; AUTO.how = how; AUTO.fails = []; AUTO.lastMiss = 0;
+    const begin = (how, cam) => {
+      AUTO.on = true; AUTO.how = how; AUTO.fails = []; AUTO.lastMiss = 0; AUTO.useCam = cam;
       keepAwake(); go('step'); autoRead();
     };
     // Los permisos se piden ahora, antes de lavarse las manos, para que no aparezcan después.
-    if (!md) { begin('voz'); return; }
+    if (!md) { begin('voz', false); return; }
     md.getUserMedia({ audio: voice, video: true })
-      .then(st => { st.getTracks().forEach(t => t.stop()); begin(voice ? 'voz' : 'mano'); })
+      .then(st => { st.getTracks().forEach(t => t.stop()); begin(voice ? 'voz' : 'mano', true); })
       .catch(() => {
-        if (voice) md.getUserMedia({ audio: true }).then(st => { st.getTracks().forEach(t => t.stop()); begin('voz'); })
+        if (voice) md.getUserMedia({ audio: true }).then(st => { st.getTracks().forEach(t => t.stop()); begin('voz', false); })
           .catch(() => toast('Para el modo automático, permita el uso del micrófono.'));
         else toast('Para el modo automático, permita el uso de la cámara.');
       });
@@ -851,25 +860,31 @@ html.modo-app, html.modo-app body { height: 100%; margin: 0; }
     AUTO.on = false; stopListen(); camStop();
     if (!S.running) releaseWake(true);
   }
-  function autoSay(text, then) { speakParts(text, then || autoListen); }
+  // Lee y sigue escuchando a la vez, para que se pueda decir "Siguiente" sin esperar.
+  function autoSay(text, then) { speakParts(text, then || null); autoListen(); }
   function autoRead() {
     if (!AUTO.on || S.screen !== 'step') return;
     const st = STEPS[S.step], timed = st.timer && !S.running && !S.done && S.remaining === S.total;
-    if (timed) autoSay(`${stepSay()} El reloj empieza ahora. Le aviso cuando termine.`, () => { startTimer(); render(); autoListen(); });
+    if (timed) autoSay(`${stepSay()} El reloj empieza ahora. Le aviso cuando termine.`, () => { if (!S.running && !S.done) { startTimer(); render(); } });
     else autoSay(`${stepSay()} ${autoHint()}`);
   }
-  function autoCmd(c) {
+  function autoCmd(c, fromCam) {
     if (!AUTO.on) return;
+    // Evita que la mano cuente dos veces o justo después de una orden de voz.
+    if (fromCam && Date.now() - AUTO.lastCmd < 1500) return;
+    AUTO.lastCmd = Date.now();
+    stopSpeak();
     if (c === 'next') { stepNext(); if (AUTO.on) autoRead(); }
     else if (c === 'prev') { stepPrev(); if (AUTO.on) autoRead(); }
     else if (c === 'repeat') autoRead();
     else if (c === 'pause' && S.running) { pauseTimer(); render(); autoSay('Reloj en pausa. Para seguir, diga Iniciar.'); }
     else if (c === 'start' && STEPS[S.step].timer && !S.running && !S.done) { startTimer(); render(); autoSay('El reloj sigue.'); }
-    else autoListen();
+    else { render(); autoListen(); }
   }
   function autoListen() {
-    if (!AUTO.on || S.screen !== 'step' || SP.state === 'playing') return;
-    if (AUTO.how === 'mano') { camStart(); render(); return; }
+    if (!AUTO.on || S.screen !== 'step') return;
+    if (AUTO.useCam) camStart();
+    if (AUTO.how === 'mano') { render(); return; }
     AUTO.want = true;
     if (AUTO.rec) return;
     const R = Rec(); if (!R) { toHand(); return; }
@@ -880,12 +895,13 @@ html.modo-app, html.modo-app body { height: 100%; margin: 0; }
         const res = e.results[i];
         for (let j = 0; j < res.length; j++) {
           const c = matchCmd(res[j].transcript);
-          if (c) { AUTO.fails = []; stopListen(); autoCmd(c); return; }
+          if (c && !echoOf(res[j].transcript)) { AUTO.fails = []; stopListen(); autoCmd(c); return; }
         }
         // Algo se dijo, pero no es una orden: se avisa como mucho cada 20 segundos (ruido de la casa).
-        if (res.isFinal && String(res[0].transcript).trim() && Date.now() - AUTO.lastMiss > 20000) {
-          AUTO.lastMiss = Date.now(); stopListen();
-          autoSay(AUTO.how === 'mano' ? autoHint() : 'No le entendí. Diga Siguiente, Repetir o Atrás.'); return;
+        // Mientras la app lee no se avisa, porque lo más probable es que se oiga a sí misma.
+        if (res.isFinal && SP.state !== 'playing' && String(res[0].transcript).trim() && Date.now() - AUTO.lastMiss > 20000) {
+          AUTO.lastMiss = Date.now();
+          autoSay('No le entendí. Diga Siguiente, Repetir o Atrás.'); return;
         }
       }
     };
@@ -907,41 +923,54 @@ html.modo-app, html.modo-app body { height: 100%; margin: 0; }
     render();
   }
   function stopListen() {
-    AUTO.want = false; AUTO.camWant = false;
+    AUTO.want = false;
     const r = AUTO.rec; AUTO.rec = null;
     if (r) { try { r.abort(); } catch (e) {} }
   }
   function toHand() {
     if (!AUTO.on || AUTO.how === 'mano') return;
     stopListen(); AUTO.how = 'mano';
-    if (!(navigator.mediaDevices && navigator.mediaDevices.getUserMedia)) { autoExit(); render(); announce('No puedo oírle. Pida a un acompañante que le muestre los pasos.'); return; }
-    autoSay('No puedo oírle. Para pasar al siguiente paso, tape la cámara de arriba con la mano, sin tocar el teléfono.');
+    if (!AUTO.useCam) { autoExit(); render(); announce('No puedo oírle. Pida a un acompañante que le muestre los pasos.'); return; }
+    autoSay('No puedo oírle. Para pasar al siguiente paso, pase la mano frente a la cámara de arriba, sin tocar el teléfono.');
   }
-  // La cámara de adelante detecta cuando la mano la tapa (la imagen se pone oscura un momento).
+  // La cámara de adelante ve la mano de dos formas: cuando pasa por delante (la imagen cambia de golpe)
+  // o cuando la tapa (la imagen se pone oscura). Mira una imagen muy pequeña, 10 veces por segundo.
+  // Después de cada aviso espera a que la imagen se quede quieta un momento antes de aceptar otro.
   function camStart() {
     AUTO.camWant = true;
-    if (AUTO.cam) return;
+    if (AUTO.cam || !hasCam()) return;
     AUTO.cam = { pending: true };
     navigator.mediaDevices.getUserMedia({ video: { facingMode: 'user', width: 160, height: 120 }, audio: false }).then(stream => {
       if (!AUTO.on) { stream.getTracks().forEach(t => t.stop()); AUTO.cam = null; return; }
       const v = document.createElement('video'); v.muted = true; v.playsInline = true; v.setAttribute('playsinline', ''); v.srcObject = stream;
-      try { v.play(); } catch (e) {}
-      const c = document.createElement('canvas'); c.width = 32; c.height = 24;
+      try { const p = v.play(); if (p && p.catch) p.catch(() => {}); } catch (e) {}
+      const W = 32, H = 24, c = document.createElement('canvas'); c.width = W; c.height = H;
       const g = c.getContext('2d', { willReadFrequently: true });
-      const cam = AUTO.cam = { stream, base: 0, dark: 0, t: null };
+      const cam = AUTO.cam = { stream, prev: null, base: 0, hits: 0, quiet: 0, armed: false, t: null };
       cam.t = setInterval(() => {
         if (v.readyState < 2) return;
-        g.drawImage(v, 0, 0, 32, 24);
-        const d = g.getImageData(0, 0, 32, 24).data; let sum = 0;
-        for (let i = 0; i < d.length; i += 4) sum += d[i] * .3 + d[i + 1] * .59 + d[i + 2] * .11;
-        const lum = sum / (d.length / 4);
+        g.drawImage(v, 0, 0, W, H);
+        const d = g.getImageData(0, 0, W, H).data, cur = new Float32Array(W * H);
+        let sum = 0, diff = 0;
+        for (let i = 0, k = 0; i < d.length; i += 4, k++) { cur[k] = d[i] * .3 + d[i + 1] * .59 + d[i + 2] * .11; sum += cur[k]; }
+        const lum = sum / cur.length;
+        // diff: qué parte de la imagen cambió de golpe (más de 25 niveles de brillo) desde la vista anterior.
+        if (cam.prev) { for (let k = 0; k < cur.length; k++) if (Math.abs(cur[k] - cam.prev[k]) > 25) diff++; diff /= cur.length; }
+        cam.prev = cur;
         if (!cam.base) { cam.base = lum; return; }
-        if (lum < Math.max(15, cam.base * .35)) {
-          // Tapada unos 0,6 segundos = Siguiente. Hay que destaparla antes de volver a usarla.
-          if (++cam.dark === 6 && AUTO.camWant && SP.state !== 'playing') { AUTO.camWant = false; autoCmd('next'); }
-        } else { cam.dark = 0; cam.base = cam.base * .9 + lum * .1; }
+        const moved = diff > .25, dark = lum < Math.max(15, cam.base * .35);
+        if (moved || dark) { cam.hits++; cam.quiet = 0; }
+        else {
+          cam.hits = 0; cam.quiet++;
+          cam.base = cam.base * .95 + lum * .05;
+          if (cam.quiet >= 8) cam.armed = true;   // 0,8 s quieta: lista para el próximo gesto
+        }
+        if (cam.armed && cam.hits >= 2 && AUTO.camWant) { cam.armed = false; cam.hits = 0; autoCmd('next', true); }
       }, 100);
-    }).catch(() => { AUTO.cam = null; autoExit(); render(); announce('No puedo usar la cámara. Pida a un acompañante que le muestre los pasos.'); });
+    }).catch(() => {
+      AUTO.cam = null; AUTO.useCam = false;
+      if (AUTO.how === 'mano') { autoExit(); render(); announce('No puedo usar la cámara. Pida a un acompañante que le muestre los pasos.'); }
+    });
   }
   function camStop() {
     const cam = AUTO.cam; AUTO.cam = null; AUTO.camWant = false;
@@ -950,10 +979,12 @@ html.modo-app, html.modo-app body { height: 100%; margin: 0; }
   }
   function autoBar() {
     if (!AUTO.on) return '';
-    const status = SP.state === 'playing' ? 'Leyendo el paso…'
-      : AUTO.how === 'mano' ? 'Tape la cámara de arriba con la mano para seguir.'
-      : AUTO.rec ? 'Le escucho. Diga «Siguiente», «Repetir» o «Atrás».' : 'Preparando el micrófono…';
-    return `<div class="autobar ${AUTO.rec || (AUTO.how === 'mano' && AUTO.camWant) ? 'on' : ''}" role="status">
+    const hand = AUTO.useCam ? ' o pase la mano frente a la cámara' : '';
+    const status = AUTO.how === 'mano' ? 'Pase la mano frente a la cámara de arriba para seguir.'
+      : SP.state === 'playing' ? `Leyendo… Puede decir «Siguiente»${hand} sin esperar.`
+      : AUTO.rec ? `Le escucho. Diga «Siguiente», «Repetir» o «Atrás»${hand}.` : 'Preparando el micrófono…';
+    const on = AUTO.rec || (AUTO.how === 'mano' && AUTO.cam);
+    return `<div class="autobar ${on ? 'on' : ''}" role="status">
       <span class="mic">${AUTO.how === 'mano' ? I.hand : I.mic}</span><span>${status}</span>
       <button data-act="auto-exit">Salir</button></div>`;
   }
@@ -1031,7 +1062,7 @@ html.modo-app, html.modo-app body { height: 100%; margin: 0; }
           </div>`).join('')}
         </div>
         ${sayBtn(PREP.map(p => p.label).join('. ') + '.')}
-        <p class="lead autonote">${I.mic}<span><b>Modo automático:</b> la app le lee cada paso y usted dice «Siguiente» para avanzar, sin tocar el teléfono.</span></p>
+        <p class="lead autonote">${I.mic}<span><b>Modo automático:</b> la app le lee cada paso. Para avanzar, diga «Siguiente» o pase la mano frente a la cámara, sin tocar el teléfono.</span></p>
       `, `<div class="stack">
         <button class="btn" data-go="step" ${all ? '' : 'disabled'}>${all ? 'Empezar los pasos' : `Faltan ${S.checks.filter(c => !c).length}`} ${I.next}</button>
         <button class="btn ghost" data-act="auto-start" ${all ? '' : 'disabled'}>${I.mic} Modo automático</button>
@@ -1407,7 +1438,14 @@ html.modo-app, html.modo-app body { height: 100%; margin: 0; }
         case 'home-yes': resetTimer(0); go('home'); break;
         case 'modal-close': S.modal = null; stopSpeak(); render(); break;
         case 'prep-info': stopSpeak(); S.modal = { type: 'prep', i: +t.dataset.i }; render(); break;
-        case 'prep-done': S.checks[S.modal.i] = true; S.modal = null; stopSpeak(); render(); break;
+        case 'prep-done': {
+          // Marca el punto y abre de una vez el detalle del siguiente que falte (ahorra un toque por casilla).
+          const i = S.modal.i; S.checks[i] = true; stopSpeak();
+          let n = S.checks.findIndex((c, j) => !c && j > i);
+          if (n < 0) n = S.checks.findIndex(c => !c);
+          S.modal = n < 0 ? null : { type: 'prep', i: n };
+          render(); break;
+        }
         case 'video': stopSpeak(); S.modal = { type: 'video' }; render(); break;
         case 'auto-start': autoStart(); break;
         case 'auto-exit': autoExit(); stopSpeak(); render(); toast('Salió del modo automático.'); break;
