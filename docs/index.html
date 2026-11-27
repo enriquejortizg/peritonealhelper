@@ -283,7 +283,18 @@ button:focus-visible, a:focus-visible, input:focus-visible { outline: 3px solid 
 .srow { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 12px; align-items: center; padding: 12px 14px; border: 1px solid var(--line); border-radius: 14px; }
 .srow small { display: block; color: var(--muted); font-size: .82em; }
 .srow b { font-size: 1.02em; font-variant-numeric: tabular-nums; overflow-wrap: anywhere; }
-.srow .lead { font-size: .88em; font-weight: 400; }
+.srow .lead { display: block; margin-top: 6px; font-size: .88em; font-weight: 400; color: var(--muted); line-height: 1.4; }
+.srow.vz b { display: block; }
+.vzprog { display: flex; align-items: center; gap: 10px; margin-top: 10px; }
+.vzbar { flex: 1; height: 12px; border-radius: 999px; background: var(--line); overflow: hidden; position: relative; }
+.vzbar b { display: block; height: 100%; width: 0; border-radius: 999px; background: var(--accent); transition: width .3s; }
+.vzbar.busy b { width: 35%; position: absolute; animation: vzbusy 1.4s ease-in-out infinite; }
+@keyframes vzbusy { from { left: -35%; } to { left: 100%; } }
+.vzpct { font-weight: 700; font-variant-numeric: tabular-nums; min-width: 3.2em; text-align: right; }
+.vzask { display: grid; gap: 8px; margin-top: 10px; }
+.vzask > span { font-size: .92em; }
+.vzask .row { display: flex; gap: 8px; }
+@media (prefers-reduced-motion: reduce) { .vzbar.busy b { animation: none; width: 100%; opacity: .5; } }
 .link { border: 0; background: none; color: var(--accent); font: 700 .95em var(--font-body); cursor: pointer; min-height: 44px; padding: 0 6px; text-decoration: underline; }
 .danger { display: grid; gap: 8px; border: 2px solid var(--alarm-soft); border-radius: 16px; padding: 14px; }
 .danger b { color: var(--alarm); }
@@ -559,7 +570,7 @@ html.modo-app, html.modo-app body { height: 100%; margin: 0; }
   ];
   const APP_NAME = 'Diálisis Contigo';
   // Versión: PRODUCCIÓN.GRANDE.RELEASE.MENOR (ver CLAUDE.md). Debe ser igual a VERSION en sw.js.
-  const APP_VERSION = '0.0.10.1';
+  const APP_VERSION = '0.0.11.1';
 
   // ---------- Configuración de cada familia ----------
   // Se llena en la configuración inicial y se guarda solo en este teléfono.
@@ -648,7 +659,12 @@ html.modo-app, html.modo-app body { height: 100%; margin: 0; }
     const key = SP.key, idx = SP.idx, u = utter(SP.parts[idx]);
     u.onend = () => { if (SP.state !== 'playing' || SP.key !== key || SP.idx !== idx) return; SP.idx++; speakNext(); };
     // Si la voz falla, se sigue igual (el modo automático vuelve a escuchar aunque no se haya podido leer).
-    u.onerror = e => { if (e && e.error !== 'interrupted' && e.error !== 'canceled' && SP.state === 'playing' && SP.key === key) { const cb = SP.done; sayStop(); if (cb) cb(); } };
+    u.onerror = e => {
+      if (!e || e.error === 'interrupted' || e.error === 'canceled' || SP.state !== 'playing' || SP.key !== key) return;
+      // Al volver a abrir la app, el teléfono no deja hablar hasta que se toque la pantalla una vez.
+      if (e.error === 'not-allowed' && AUTO.on) { AUTO.tap = true; stopSpeak(); render(); return; }
+      const cb = SP.done; sayStop(); if (cb) cb();
+    };
     sayU(u);
   }
   // Toda frase que dice la app queda anotada (SAID), para no confundir su eco con una orden.
@@ -930,7 +946,8 @@ html.modo-app, html.modo-app body { height: 100%; margin: 0; }
   // service worker. Solo escucha las palabras de las órdenes, así se equivoca menos con ruido.
   const VOSK_JS = 'vosk/vosk.js', VOSK_MODEL = 'vosk/modelo-es.tar.gz';
   const VOSK_WORDS = ['siguiente', 'listo', 'continuar', 'adelante', 'atrás', 'anterior', 'volver', 'repetir', 'repita', 'otra vez', 'pausa', 'espere', 'iniciar', 'reloj', '[unk]'];
-  const VZ = { model: null, loading: null, state: null };
+  // state: null, 'bajando' (con pct), 'preparando' (Vosk descomprime el modelo) o 'borrando'.
+  const VZ = { model: null, loading: null, state: null, pct: 0 };
   const voskCan = () => typeof WebAssembly === 'object' && !!(window.AudioContext || window.webkitAudioContext) && hasCam() && 'indexedDB' in window;
   const voskSaved = () => { try { return localStorage.getItem('dp-voz') === 'listo'; } catch (e) { return false; } };
   function voskScript() {
@@ -952,12 +969,68 @@ html.modo-app, html.modo-app body { height: 100%; margin: 0; }
     }
     return VZ.loading;
   }
+  // Descarga con barra de avance. Vosk no avisa cuánto lleva, así que la app descarga primero vosk.js y el
+  // modelo, y deja el modelo en la caché "voz": el service worker se lo entrega a Vosk sin volver a bajarlo.
+  // Vosk lo descomprime y lo guarda en el teléfono (IndexedDB); después se borra de la caché para no ocupar el doble.
   function voskDownload() {
-    if (VZ.state === 'bajando') return;
-    VZ.state = 'bajando'; render();
+    if (VZ.state) return;
+    VZ.state = 'bajando'; VZ.pct = 0; render();
     try { navigator.storage && navigator.storage.persist && navigator.storage.persist(); } catch (e) {}
-    voskModel().then(() => { VZ.state = null; toast('Listo: la voz ya funciona sin internet.'); render(); })
-      .catch(() => { VZ.state = null; toast('No se pudo descargar. Revise que tenga internet y vuelva a intentarlo.'); render(); });
+    const modelUrl = new URL(VOSK_MODEL, location.href).href, hasCache = 'caches' in window;
+    const got = [0, 0], tot = [5.8e6, 40e6];   // tamaños aproximados, por si el servidor no los dice
+    const paint = () => {
+      VZ.pct = Math.min(99, Math.floor(100 * (Math.min(got[0], tot[0]) + Math.min(got[1], tot[1])) / (tot[0] + tot[1])));
+      const b = app.querySelector('.vzbar b'), t = app.querySelector('.vzpct');
+      if (b) b.style.width = VZ.pct + '%';
+      if (t) t.textContent = VZ.pct + ' %';
+    };
+    const pull = (url, k) => fetch(url).then(res => {
+      if (!res.ok) throw new Error('http ' + res.status);
+      const n = +res.headers.get('Content-Length'); if (n) tot[k] = n;
+      if (!res.body || !res.body.getReader) return res.blob().then(bl => { got[k] = tot[k]; paint(); return bl; });
+      const rd = res.body.getReader(), parts = [];
+      const step = () => rd.read().then(({ done, value }) => {
+        if (done) { got[k] = tot[k]; paint(); return new Blob(parts); }
+        parts.push(value); got[k] += value.length; paint(); return step();
+      });
+      return step();
+    });
+    const forget = () => (hasCache ? caches.open('voz').then(c => c.delete(modelUrl)).catch(() => {}) : null);
+    pull(VOSK_JS, 0)
+      .then(() => pull(modelUrl, 1))
+      .then(bl => hasCache && caches.open('voz').then(c => c.put(modelUrl, new Response(bl, { headers: { 'Content-Type': 'application/gzip', 'Content-Length': String(bl.size) } }))))
+      .then(() => { VZ.state = 'preparando'; render(); return voskModel(); })
+      .then(() => { VZ.state = null; forget(); toast('Listo: la voz ya funciona sin internet.'); render(); })
+      .catch(() => { VZ.state = null; forget(); toast('No se pudo descargar. Revise que tenga internet y vuelva a intentarlo.'); render(); });
+  }
+  // Borra la voz sin internet para liberar espacio: el modelo (IndexedDB "/vosk"), vosk.js (caché "voz") y la marca.
+  // Fila de Ajustes: estado, explicación, barra de avance y Descargar o Borrar (con confirmación).
+  function vozRow() {
+    const st = VZ.state, saved = voskSaved();
+    const status = st === 'bajando' ? 'Descargando…' : st === 'preparando' ? 'Preparando la voz…' : st === 'borrando' ? 'Borrando…' : saved ? 'Descargada' : 'No descargada';
+    const lead = st === 'preparando' ? 'Ya se descargó. Ahora se guarda en el teléfono; puede tardar un minuto. No cierre la app.'
+      : st === 'bajando' ? 'No cierre la app mientras se descarga.'
+      : saved ? 'El modo automático entiende «Siguiente» sin internet. Ocupa unos 40 MB; puede borrarla para liberar espacio.'
+      : 'Para que el modo automático entienda «Siguiente» sin internet. Se descarga una sola vez (unos 40 MB); mejor con wifi.';
+    const bar = st === 'bajando' ? `<div class="vzprog"><div class="vzbar" role="progressbar" aria-label="Descarga de la voz"><b style="width:${VZ.pct}%"></b></div><span class="vzpct">${VZ.pct} %</span></div>`
+      : st === 'preparando' || st === 'borrando' ? '<div class="vzprog"><div class="vzbar busy"><b></b></div></div>' : '';
+    const ask = S.confirmVoz && saved && !st ? `<div class="vzask"><span>¿Borrar la voz sin internet? Para volver a usarla habrá que descargarla otra vez.</span>
+      <div class="row"><button class="btn alarm" data-act="voz-borrar">Sí, borrar</button><button class="btn ghost" data-act="voz-no">No</button></div></div>` : '';
+    const btn = st || S.confirmVoz ? '' : saved ? '<button class="link" data-act="voz-pregunta">Borrar</button>' : '<button class="link" data-act="voz-bajar">Descargar</button>';
+    return `<div class="srow vz"><span><small>Voz sin internet</small><b>${status}</b><span class="lead">${lead}</span>${bar}${ask}</span>${btn}</div>`;
+  }
+  function voskRemove() {
+    if (VZ.state) return;
+    VZ.state = 'borrando'; S.confirmVoz = false; render();
+    voskStop();
+    try { if (VZ.model) { VZ.model.terminate(); VZ.model.worker && VZ.model.worker.terminate(); } } catch (e) {}
+    VZ.model = null; VZ.loading = null;
+    try { localStorage.removeItem('dp-voz'); } catch (e) {}
+    const db = new Promise(ok => {
+      try { const r = indexedDB.deleteDatabase('/vosk'); r.onsuccess = r.onerror = () => ok(); r.onblocked = () => setTimeout(ok, 1500); } catch (e) { ok(); }
+    });
+    const cache = 'caches' in window ? caches.delete('voz').catch(() => {}) : null;
+    Promise.all([db, cache]).then(() => { VZ.state = null; toast('Se borró la voz sin internet y se liberó espacio.'); render(); });
   }
   // Escucha continua con Vosk: no se corta entre pasos, así no hay pitidos ni pausas.
   function voskStart() {
@@ -1002,14 +1075,18 @@ html.modo-app, html.modo-app body { height: 100%; margin: 0; }
     try { vk.ctx && vk.ctx.close(); } catch (e) {}
   }
 
-  function autoStart() {
+  // resume: al volver a abrir la app en un recambio que iba en modo automático (sigue en el mismo paso).
+  function autoStart(resume) {
     const offline = voskSaved() && voskCan();
     const voice = offline || (!!Rec() && navigator.onLine !== false);
     const md = hasCam() ? navigator.mediaDevices : null;
     if (!voice && !md) { toast('Este teléfono no permite el modo automático. Use "Empezar los pasos".'); return; }
     const begin = (how, cam) => {
-      AUTO.on = true; AUTO.how = how; AUTO.fails = []; AUTO.lastMiss = 0; AUTO.useCam = cam;
-      keepAwake(); go('step'); autoRead();
+      if (resume && S.screen !== 'step') return;
+      AUTO.on = true; AUTO.how = how; AUTO.fails = []; AUTO.lastMiss = 0; AUTO.useCam = cam; AUTO.tap = false;
+      keepAwake();
+      if (resume) render(); else go('step');
+      autoWake(resume ? 'Seguimos en modo automático.' : 'Modo automático.');
     };
     // Los permisos se piden ahora, antes de lavarse las manos, para que no aparezcan después.
     if (!md) { begin('voz', false); return; }
@@ -1023,22 +1100,38 @@ html.modo-app, html.modo-app body { height: 100%; margin: 0; }
   }
   function autoExit() {
     if (!AUTO.on) return;
-    AUTO.on = false; stopListen(); voskStop(); camStop();
+    AUTO.on = false; AUTO.wake = null; AUTO.tap = false; stopListen(); voskStop(); camStop();
     if (!S.running) releaseWake(true);
   }
+  // Antes de leer se enciende el micrófono (y la cámara) y se espera a que estén listos: si se encienden
+  // cuando la app ya está hablando, Android corta el comienzo de la frase ("…lavamanos" en lugar de
+  // "Lave el lavamanos"). intro: una frase corta antes del paso, que además "despierta" la voz del teléfono.
+  function autoWake(intro) {
+    const tok = AUTO.wake = {}, t0 = Date.now();
+    autoListen();
+    const ready = () => AUTO.how === 'mano' || (AUTO.rec && AUTO.rec.started) || (AUTO.vk && AUTO.vk.ready);
+    (function wait() {
+      if (!AUTO.on || AUTO.wake !== tok) return;
+      if (!ready() && Date.now() - t0 < 3000) { setTimeout(wait, 100); return; }
+      setTimeout(() => { if (AUTO.on && AUTO.wake === tok) { AUTO.wake = null; autoRead(intro); } }, 400);
+    })();
+  }
+  // La app pasa a segundo plano: se callan la voz, el micrófono y la cámara, pero el modo automático
+  // sigue encendido. Al volver, autoWake vuelve a encenderlos y lee el paso en el que iba.
+  function autoSleep() { if (!AUTO.on) return; AUTO.wake = null; stopSpeak(); stopListen(); voskStop(); camStop(); }
   // Lee y sigue escuchando a la vez, para que se pueda decir "Siguiente" sin esperar.
   function autoSay(text, then) { speakParts(text, then || null); autoListen(); }
-  function autoRead() {
+  function autoRead(intro) {
     if (!AUTO.on || S.screen !== 'step') return;
-    const st = STEPS[S.step], timed = st.timer && !S.running && !S.done && S.remaining === S.total;
-    if (timed) autoSay(`${stepSay()} El reloj empieza ahora. Le aviso cuando termine.`, () => { if (!S.running && !S.done) { startTimer(); render(); } });
-    else autoSay(`${stepSay()} ${autoHint()}`);
+    const st = STEPS[S.step], timed = st.timer && !S.running && !S.done && S.remaining === S.total, pre = intro ? intro + ' ' : '';
+    if (timed) autoSay(`${pre}${stepSay()} El reloj empieza ahora. Le aviso cuando termine.`, () => { if (!S.running && !S.done) { startTimer(); render(); } });
+    else autoSay(`${pre}${stepSay()} ${autoHint()}`);
   }
   function autoCmd(c, fromCam) {
     if (!AUTO.on) return;
     // Evita que la mano cuente dos veces o justo después de una orden de voz.
     if (fromCam && Date.now() - AUTO.lastCmd < 1500) return;
-    AUTO.lastCmd = Date.now();
+    AUTO.lastCmd = Date.now(); AUTO.wake = null; AUTO.tap = false;
     stopSpeak();
     if (c === 'next') { stepNext(); if (AUTO.on) autoRead(); }
     else if (c === 'prev') { stepPrev(); if (AUTO.on) autoRead(); }
@@ -1060,6 +1153,7 @@ html.modo-app, html.modo-app body { height: 100%; margin: 0; }
     // El reconocedor sigue escuchando después de una orden (sin el pitido de volver a empezar). El resultado
     // que traía la orden ya no cuenta, aunque siga creciendo con lo que lee la app en el paso nuevo.
     r.used = -1;
+    r.onstart = r.onaudiostart = () => { if (!r.started) { r.started = true; render(); } };
     r.onresult = e => {
       for (let i = Math.max(e.resultIndex || 0, r.used + 1); i < e.results.length; i++) {
         const res = e.results[i];
@@ -1164,6 +1258,9 @@ html.modo-app, html.modo-app body { height: 100%; margin: 0; }
       : SP.state === 'playing' ? `Leyendo… Puede decir «Siguiente» o «Anterior»${hand} sin esperar.`
       : (AUTO.rec || (AUTO.vk && AUTO.vk.ready)) ? `Le escucho. Diga «Siguiente», «Anterior» o «Repetir»${hand}.` : 'Preparando el micrófono…';
     const on = AUTO.rec || (AUTO.vk && AUTO.vk.ready) || (AUTO.how === 'mano' && AUTO.cam);
+    if (AUTO.tap) return `<div class="autobar on" role="status">
+      <span class="mic">${I.mic}</span><span>Sigue en modo automático. Toque una vez para que la app vuelva a hablar.</span>
+      <button data-act="auto-resume">Seguir</button><button data-act="auto-exit">Salir</button></div>`;
     return `<div class="autobar ${on ? 'on' : ''}" role="status">
       <span class="mic">${AUTO.how === 'mano' ? I.hand : I.mic}</span><span>${status}</span>
       <button data-act="auto-exit">Salir</button></div>`;
@@ -1178,6 +1275,7 @@ html.modo-app, html.modo-app body { height: 100%; margin: 0; }
       if (!inFlow()) { localStorage.removeItem('dp-progress'); return; }
       localStorage.setItem('dp-progress', JSON.stringify({
         at: Date.now(), screen: S.screen, step: S.step, sub: S.sub, checks: S.checks, practice: S.practice, session: S.session, aspect: S.aspect, reg: S.reg,
+        auto: AUTO.on && S.screen === 'step',
         timer: { total: S.total, remaining: S.remaining, running: S.running, endAt: S.endAt, done: S.done }
       }));
     } catch (e) {}
@@ -1194,6 +1292,7 @@ html.modo-app, html.modo-app body { height: 100%; margin: 0; }
       if (S.remaining === 0) S.done = true;
       else { S.endAt = tm.endAt; S.running = true; S.timer = setInterval(tick, 500); keepAwake(); }
     }
+    S.autoResume = !!p.auto && p.screen === 'step';
     return true;
   }
 
@@ -1244,7 +1343,7 @@ html.modo-app, html.modo-app body { height: 100%; margin: 0; }
         ${sayBtn(PREP.map(p => p.label).join('. ') + '.')}
         <p class="lead autonote">${I.mic}<span><b>Modo automático:</b> la app le lee cada paso. Para avanzar, diga «Siguiente» o pase la mano una vez frente a la cámara, sin tocar el teléfono. Para volver, diga «Anterior».${voskCan() && !voskSaved() ? ' Para usar la voz sin internet, descárguela una vez en Ajustes.' : ''}</span></p>
       `, `<div class="stack">
-        <button class="btn" data-go="step" ${all ? '' : 'disabled'}>${all ? 'Empezar los pasos' : `Faltan ${S.checks.filter(c => !c).length}`} ${I.next}</button>
+        <button class="btn" data-go="step" ${all ? '' : 'disabled'}>${all ? 'Empezar los pasos' : (n => n === 1 ? 'Falta 1' : `Faltan ${n}`)(S.checks.filter(c => !c).length)} ${I.next}</button>
         <button class="btn ghost" data-act="auto-start" ${all ? '' : 'disabled'}>${I.mic} Modo automático</button>
       </div>`, { back: 'home' });
     },
@@ -1502,8 +1601,7 @@ html.modo-app, html.modo-app body { height: 100%; margin: 0; }
           <div class="srow"><span><small>Tamaño de la bolsa</small><b>${(CFG.bag / 1000).toLocaleString('es')} L</b></span></div>
           <div class="srow"><span><small>Teléfono del hospital</small><b>${esc(CFG.phone)}</b></span></div>
         </div>
-        ${voskCan() ? `<div class="srow"><span><small>Voz sin internet</small><b>${voskSaved() ? 'Descargada' : VZ.state === 'bajando' ? 'Descargando… (puede tardar unos minutos)' : 'No descargada'}</b><span class="lead">Para que el modo automático entienda «Siguiente» sin internet. Se descarga una sola vez (unos 40 MB); mejor con wifi.</span></span>
-          ${voskSaved() || VZ.state === 'bajando' ? '' : '<button class="link" data-act="voz-bajar">Descargar</button>'}</div>` : ''}
+        ${voskCan() ? vozRow() : ''}
         <button class="btn ghost wide" data-act="edit">Cambiar la configuración</button>
         <button class="btn ghost wide" data-act="practice">${I.play} Practicar un recambio</button>
         <div class="danger">
@@ -1587,7 +1685,7 @@ html.modo-app, html.modo-app body { height: 100%; margin: 0; }
     if (screen === 'home' || screen === 'finished') S.session = null;
     if (screen === 'prep' && !S.session) S.session = { id: Date.now() };
     if (screen === 'home') S.practice = false;
-    if (screen !== 'settings') S.confirmReset = false;
+    if (screen !== 'settings') { S.confirmReset = false; S.confirmVoz = false; }
     if (screen === 'prep' && S.screen === 'home') S.checks = PREP.map(() => false);
     if (screen === 'step') { if (S.screen === 'prep') { S.step = 0; S.sub = 0; } resetTimer(STEPS[S.step].timer); }
     if (screen !== 'step') resetTimer(0);
@@ -1630,7 +1728,11 @@ html.modo-app, html.modo-app body { height: 100%; margin: 0; }
         }
         case 'video': stopSpeak(); S.modal = { type: 'video' }; render(); break;
         case 'auto-start': autoStart(); break;
+        case 'auto-resume': AUTO.tap = false; autoRead('Seguimos en modo automático.'); break;
         case 'voz-bajar': voskDownload(); break;
+        case 'voz-pregunta': S.confirmVoz = true; render(); break;
+        case 'voz-no': S.confirmVoz = false; render(); break;
+        case 'voz-borrar': voskRemove(); break;
         case 'auto-exit': autoExit(); stopSpeak(); render(); toast('Salió del modo automático.'); break;
         case 'reset': S.confirmReset = true; render(); break;
         case 'reset-no': S.confirmReset = false; render(); break;
@@ -1716,16 +1818,23 @@ html.modo-app, html.modo-app body { height: 100%; margin: 0; }
   try { speechSynthesis.getVoices(); } catch (e) {}
 
   // Al volver a la app: se apaga la alarma y, si el reloj terminó mientras tanto, se da el aviso hablado.
+  // En modo automático, al salir de la app se callan la voz, el micrófono y la cámara; al volver se
+  // encienden otra vez y se lee el paso en el que iba (o el aviso de que el reloj terminó).
   document.addEventListener('visibilitychange', () => {
-    if (document.hidden) return;
+    if (document.hidden) { autoSleep(); return; }
     stopAlarm();
     if (S.running || AUTO.on) { tick(); keepAwake(); }
-    if (S.done && !S.announced) { announceDone(); if (S.screen === 'step' && !S.modal) render(); }
+    if (AUTO.on && S.screen === 'step') {
+      const intro = S.done && !S.announced ? 'Tiempo terminado.' : 'Seguimos en modo automático.';
+      S.announced = true; if (!S.modal) render(); autoWake(intro);
+    } else if (S.done && !S.announced) { announceDone(); if (S.screen === 'step' && !S.modal) render(); }
   });
 
   const resumed = restoreProgress();
   render();
   if (resumed) toast(S.practice ? 'Continuamos la práctica donde la dejó.' : 'Continuamos el recambio donde lo dejó.');
+  // Si el recambio iba en modo automático, sigue en modo automático.
+  if (resumed && S.autoResume) { S.autoResume = false; autoStart(true); }
 })();
 </script>
 
