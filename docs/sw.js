@@ -1,9 +1,10 @@
 // Diálisis Contigo · Copyright (C) 2026 Enrique Ortiz · SPDX-License-Identifier: GPL-3.0-or-later
 // Service worker de Diálisis Contigo: guarda la app en el teléfono para que abra sin internet.
 // Debe ser igual a APP_VERSION en index.html (la prueba lo comprueba). Al cambiarla, los teléfonos descargan la app nueva.
-const VERSION = '0.0.7.1';
+const VERSION = '0.0.8.1';
 const APP_CACHE = 'app-' + VERSION;
 const FONT_CACHE = 'fuentes';
+const VOZ_CACHE = 'voz';
 
 const APP_FILES = [
   './',
@@ -55,6 +56,14 @@ self.addEventListener('fetch', event => {
   }
 
   if (url.origin !== self.location.origin) return;
+
+  // Voz sin internet: vosk.js se guarda la primera vez que se descarga y no se borra al cambiar de versión.
+  // El modelo no pasa por aquí: Vosk lo guarda ya descomprimido en el teléfono (IndexedDB).
+  if (url.pathname.endsWith('/vosk/vosk.js')) {
+    event.respondWith(caches.open(VOZ_CACHE).then(cache => cache.match(req).then(hit => hit || fetch(req).then(res => { if (res.ok) cache.put(req, res.clone()); return res; }))));
+    return;
+  }
+  if (url.pathname.endsWith('/vosk/modelo-es.tar.gz')) return;
 
   // Pantalla principal: intenta traer la versión nueva; sin internet usa la guardada.
   if (req.mode === 'navigate') {
