@@ -1,0 +1,33 @@
+# Diálisis Contigo · Copyright (C) 2026 Enrique Ortiz · SPDX-License-Identifier: GPL-3.0-or-later
+# Descarga el modelo pequeño de voz en español de Vosk (Apache 2.0, alphacephei.com) y lo guarda
+# en docs/vosk/modelo-es.tar.gz, que es el formato que usa vosk-browser. Solo hace falta una vez:
+# si el archivo ya existe, no hace nada. Se puede volver a correr a mano desde la pestaña Actions.
+name: Modelo de voz sin internet
+on:
+  workflow_dispatch:
+  push:
+    paths: ['.github/workflows/modelo-voz.yml']
+permissions:
+  contents: write
+jobs:
+  modelo:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Descargar y empaquetar el modelo
+        run: |
+          set -e
+          if [ -f docs/vosk/modelo-es.tar.gz ]; then echo "Ya existe"; exit 0; fi
+          curl -fsSL -o modelo.zip https://alphacephei.com/vosk/models/vosk-model-small-es-0.42.zip
+          unzip -q modelo.zip
+          mkdir -p docs/vosk
+          tar -czf docs/vosk/modelo-es.tar.gz vosk-model-small-es-0.42
+          ls -la docs/vosk
+      - name: Guardar en el repositorio
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898283+github-actions[bot]@users.noreply.github.com"
+          git add docs/vosk/modelo-es.tar.gz
+          git diff --cached --quiet && exit 0
+          git commit -m "Modelo de voz en español (Vosk small es 0.42)"
+          git push
