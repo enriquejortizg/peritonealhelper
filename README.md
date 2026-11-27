@@ -2,7 +2,7 @@
 
 Guía paso a paso para que los familiares de pacientes hagan la diálisis peritoneal en casa. Es una app web instalable: se publica gratis en GitHub Pages, los familiares la abren en Chrome de Android, la instalan con un toque y después funciona sin internet.
 
-> **Prototipo con contenido de ejemplo.** Los pasos, tiempos y el teléfono son ilustrativos. Antes de dársela a familias, reemplácelos con el procedimiento aprobado por el equipo de nefrología.
+> **Prototipo en revisión.** Los pasos vienen de lo que dictó una enfermera del servicio, pero todavía no están aprobados formalmente por el equipo de nefrología. El teléfono es de ejemplo. No se la dé a familias hasta tener esa aprobación.
 
 ## Archivos
 

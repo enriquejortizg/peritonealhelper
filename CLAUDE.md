@@ -8,7 +8,7 @@ App para que los familiares de pacientes de un servicio de diálisis hospitalari
 - **Usuarios nerviosos o con poca práctica leyendo.** Una cosa por pantalla, dibujo grande, frases cortas, botones grandes, botón Escuchar en cada paso y letra grande (botón Aa). Los textos van en español, tratando de "usted".
 
 ## Estado
-- Es una **prueba de concepto**. Los pasos, tiempos y teléfonos son **de ejemplo** y la app lo indica en cada pantalla. El procedimiento real está pendiente: debe venir del equipo de nefrología del hospital y ser aprobado por él.
+- Es una **prueba de concepto**. Desde 0.0.5.1, "Antes de empezar" y los pasos vienen de lo que dictó una enfermera del servicio (con un video de enfermería como referencia para los nombres de las partes). Todavía falta la aprobación formal del equipo de nefrología, por eso la app sigue indicando en cada pantalla que el contenido es de ejemplo. Los teléfonos también son de ejemplo.
 - El nombre "Diálisis Contigo" es provisional.
 - App publicada: https://enriquejortizg.github.io/peritonealhelper/ (GitHub Pages desde `main`, carpeta `/docs`).
 - Versión de presentación (la app dentro de un teléfono, con notas): https://claude.ai/artifact/ED46QZZbxHzQWuDv1pk2B1, privada del usuario. Se actualiza publicando `dialisis-contigo.html` con ese `url`.
@@ -24,7 +24,7 @@ App para que los familiares de pacientes de un servicio de diálisis hospitalari
 - "Antes de empezar": cada punto tiene un botón **i** que abre lo que hay que hacer para darlo por cumplido (`PREP[].items`, más `ask` para lo que hay que confirmar con la enfermera), con Escuchar y "Listo, ya lo hice".
 - Configuración inicial con la enfermera: nombre del paciente, tipo de diálisis (solo la manual; la de máquina aparece como "Próximamente"), recambios al día y horarios, tamaño de la bolsa, unidad y teléfono. Termina con un resumen y un recambio de práctica que no se anota.
 - Código QR del hospital **simulado**: no usa la cámara y carga `EXAMPLE`.
-- Recambio guiado de 10 pasos con temporizadores, aspecto del líquido, alarmas, registro, recordatorios y ajustes (incluye "Empezar de nuevo" para repetir la demostración).
+- Recambio guiado de 29 pasos (limpieza con un paño de 5 caras, tres lavados de manos, conexión, drenaje, infusión, desconexión y pesado de la bolsa). Los pasos pueden tener subpasos (`STEPS[].items`), que se muestran como lista y se leen con Escuchar. Solo hay temporizador en los lavados de manos y en "contar hasta 5"; el drenaje y la infusión no tienen tiempo fijo porque el familiar ve cuándo terminan. Incluye aspecto del líquido, alarmas, registro, recordatorios y ajustes (incluye "Empezar de nuevo" para repetir la demostración).
 - Escuchar se lee frase por frase, con Pausar (continúa desde la frase en curso) y Detener (la próxima vez empieza desde el principio). La pausa propia del navegador no es confiable en Android.
 - Botón "Ver video" en cada paso: se activa cuando el paso tiene `video` en `STEPS`; si no, aparece deshabilitado.
 - El temporizador cuenta contra la hora de término y mantiene la pantalla encendida. Si termina con la app en segundo plano, suena una alarma fuerte durante un minuto y llega una notificación; el aviso hablado se da al volver a la app.
@@ -47,7 +47,7 @@ La versión se ve junto al título de la app, en letra pequeña y gris (por ejem
 
 Va en dos lugares que deben coincidir: `APP_VERSION` en `docs/index.html` y `VERSION` en `docs/sw.js`. La prueba falla si no son iguales. Cambiar `VERSION` es lo que hace que los teléfonos descarguen la app nueva.
 
-Historial: 0.0.1 prototipo inicial · 0.0.2 configuración inicial y nombre · 0.0.3 mejoras tras probar en teléfono · 0.0.3.1 versión visible · 0.0.4.1 detalle de "Antes de empezar".
+Historial: 0.0.1 prototipo inicial · 0.0.2 configuración inicial y nombre · 0.0.3 mejoras tras probar en teléfono · 0.0.3.1 versión visible · 0.0.4.1 detalle de "Antes de empezar" · 0.0.5.1 pasos dictados por la enfermera.
 
 ## Licencia
 Software libre bajo **GPL-3.0-or-later**, © 2026 Enrique Ortiz. El texto oficial está en `LICENSE`. Los archivos de código llevan una cabecera SPDX, y Ajustes muestra el aviso de licencia con un enlace al código fuente. Los archivos nuevos de código deben llevar la misma cabecera.
@@ -57,6 +57,8 @@ Software libre bajo **GPL-3.0-or-later**, © 2026 Enrique Ortiz. El texto oficia
 - PWA ahora. Para alarmas confiables a la hora del recambio, empaquetar después como APK con Capacitor, reutilizando el mismo contenido.
 
 ## Pendientes e ideas
+- Dudas abiertas con la enfermera: si la mascarilla va antes del primer lavado de manos (hoy está antes, como suposición), cómo pasar el peso de la bolsa de drenaje a ml, el color del tapón de cada concentración, si se incluye el cuidado diario del orificio y si la ruptura de la línea de transferencia va como alarma.
+- Dibujos definitivos para los pasos nuevos (paño, Exsept, pinza, paral, empaque, línea, pesa); los actuales son provisionales.
 - Pasos reales del hospital y audios grabados por las enfermeras, en lugar de la voz del teléfono.
 - Código QR real de configuración generado por el personal.
 - APK con alarmas locales.
