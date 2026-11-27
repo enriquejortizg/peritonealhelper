@@ -28,9 +28,15 @@ global.document = {
   getElementById: () => app, querySelectorAll: () => [],
   querySelector: s => (s === '.toast' ? null : { appendChild() {}, remove() {} }),
   documentElement: { style: { setProperty() {} } },
-  createElement: () => ({ remove() {}, set textContent(v) { toastMsg = v; } })
+  // video y canvas para la cámara simulada del modo automático (ver CAM más abajo).
+  createElement: tag => tag === 'video' ? { setAttribute() {}, play: () => Promise.resolve(), readyState: 2 }
+    : tag === 'canvas' ? { getContext: () => ({ drawImage() {}, getImageData: () => ({ data: CAM.frame }) }) }
+    : { remove() {}, set textContent(v) { toastMsg = v; } }
 };
 global.window = global; global.navigator = {};
+// Cámara simulada: la imagen que "ve" es CAM.frame; open cuenta las cámaras encendidas.
+const frame = v => new Uint8ClampedArray(32 * 24 * 4).fill(v);
+const CAM = { open: 0, frame: frame(90) };
 // Voz simulada: guarda lo que se pide leer; cancel() avisa "interrupted" como el navegador.
 // Avisa "start" al empezar y "end" al terminar (finish), con la propiedad onend y con addEventListener.
 global.SpeechSynthesisUtterance = class {
@@ -197,19 +203,19 @@ const NSTEPS = STEPS_SRC.match(/\{ pic:/g).length + (STEPS_SRC.match(/\{ title:/
   click({ id: 'ob-save' });
   ok(has('Todo listo'), 'Guardar desde el código termina la configuración');
 
-  // Modo automático: lee cada paso y avanza cuando el familiar dice "Siguiente", sin tocar el teléfono.
-  const recs = [];
-  global.webkitSpeechRecognition = class { constructor() { recs.push(this); this.on = false; } start() { this.on = true; if (this.onstart) this.onstart(); } abort() { this.on = false; if (this.onend) this.onend(); } stop() { this.abort(); } };
-  const listening = () => recs.some(r => r.on);
+  // Modo automático: lee cada paso y avanza cuando el familiar pasa la mano frente a la cámara, sin tocar el teléfono.
+  navigator.mediaDevices = { getUserMedia: () => { CAM.open++; return Promise.resolve({ getTracks: () => [{ stop() { CAM.open--; } }] }); } };
+  const camOn = () => CAM.open > 0;
+  const wait = ms => new Promise(r => setTimeout(r, ms));
+  // La cámara aprende cómo se ve quieta; luego aparece algo (la mano) y en menos de 2 s vuelve a verse igual.
+  const passHand = async () => { await wait(800); CAM.frame = frame(220); await wait(400); CAM.frame = frame(90); await wait(300); };
   // Termina de "leer" todo lo pendiente y devuelve lo que se dijo.
   const finishSpeech = async () => {
     const from = speechSynthesis.spoken.length - (speechSynthesis.cur ? 1 : 0);
     for (let k = 0; k < 200; k++) if (!speechSynthesis.finish()) break;
-    await new Promise(r => setTimeout(r, 300));
+    await wait(300);
     return speechSynthesis.spoken.slice(from).map(u => u.text).join(' ');
   };
-  // Como Chrome con continuous: cada frase oída es un resultado nuevo que se suma a la lista.
-  const hear = t => { const r = recs.filter(x => x.on).pop(); if (!r) return; const res = [{ transcript: t }]; res.isFinal = true; r.list = (r.list || []).concat([res]); r.onresult({ resultIndex: r.list.length - 1, results: r.list }); };
   click({ data: { go: 'home' } });
   click({ data: { go: 'prep' } });
   ok(/data-act="auto-start" disabled/.test(appHTML) && has('Empezar los pasos') === false, 'Modo automático espera a que se marque todo');
@@ -217,61 +223,39 @@ const NSTEPS = STEPS_SRC.match(/\{ pic:/g).length + (STEPS_SRC.match(/\{ title:/
   ok(has('Falta 1') && !has('Faltan 1'), 'Con una casilla sin marcar dice "Falta 1"');
   click({ data: { check: '4' } });
   ok(has('Empezar los pasos') && /data-act="auto-start" >/.test(appHTML), '"Antes de empezar" tiene Empezar los pasos y Modo automático');
+  ok(!/Siguiente»|diga/i.test(appHTML.match(/autonote[\s\S]*?<\/p>/)[0]) && has('pase la mano'), 'El modo automático se explica solo con la mano (sin voz)');
+  const n0 = speechSynthesis.spoken.length;
   click({ data: { act: 'auto-start' } });
-  await new Promise(r => setTimeout(r, 700));   // primero enciende el micrófono, después lee
-  ok(has('Paso 1 de') && has('Leyendo') && listening(), 'Modo automático: lee el primer paso y escucha a la vez');
-  const nRecs = recs.length;
-  hear('Lave el lavamanos con jabón siguiente');
-  ok(has('Póngase la mascarilla'), 'Se puede decir "Siguiente" sin esperar, aunque el reconocedor lo junte con lo que lee la app');
-  ok(recs.length === nRecs && listening(), 'Después de una orden sigue escuchando con el mismo reconocedor, sin volver a empezar (sin pitido)');
-  await finishSpeech();
-  hear('cuando esté listo diga siguiente o pase la mano una vez frente a la cámara');
-  ok(has('Póngase la mascarilla') && !speechSynthesis.cur, 'El eco de "diga Siguiente" no cuenta como orden ni hace decir "No le entendí"');
-  hear('diga siguiente o pase la mano siguiente');
-  ok(has('Primer lavado de manos'), 'Decir "Siguiente" justo después de que la app dice "diga Siguiente" sí avanza');
-  hear('anterior');
-  ok(has('Póngase la mascarilla'), '"Anterior" vuelve al paso de la mascarilla');
-  hear('Usted y el paciente se ponen la mascarilla');
-  ok(has('Póngase la mascarilla'), 'Lo que la app lee no cuenta como orden');
+  await wait(700);   // primero enciende la cámara, después lee
+  ok(has('Paso 1 de') && has('Leyendo') && camOn(), 'Modo automático: lee el primer paso y mira la cámara a la vez');
+  ok(speechSynthesis.spoken[n0] && speechSynthesis.spoken[n0].text === 'Modo automático.', 'Lo primero que dice es "Modo automático." (no se corta el paso)');
+  ok(typeof webkitSpeechRecognition === 'undefined' && !has('micrófono') && !has('Diga'), 'No usa el reconocimiento de voz ni habla del micrófono');
+  await passHand();
+  ok(has('Póngase la mascarilla'), 'Pasar la mano mientras lee avanza al paso siguiente');
   let said = await finishSpeech();
-  ok(/Usted y el paciente se ponen la mascarilla/.test(said) && /diga Siguiente/.test(said) && listening() && has('Le escucho'), 'Al terminar de leer, sigue escuchando');
-  hear('anterior');
-  ok(has('Lave el lavamanos'), 'Decir "Anterior" vuelve al paso anterior, aunque esté leyendo');
-  await finishSpeech();
-  hear('la tele está prendida');
-  said = await finishSpeech();
-  ok(/No le entendí/.test(said) && has('Lave el lavamanos'), 'Si no entiende, lo dice y no avanza');
-  hear('repita');
-  said = await finishSpeech();
-  ok(/Lave el lavamanos con jabón/.test(said), 'Decir "Repetir" vuelve a leer el paso');
-  hear('siguiente'); await finishSpeech();
-  hear('cuando esté listo diga siguiente');
-  ok(has('Póngase la mascarilla'), 'El eco de lo último que leyó la app no cuenta como orden');
-  await new Promise(r => setTimeout(r, 900));
-  hear('listo');
+  ok(/Usted y el paciente se ponen la mascarilla/.test(said) && /pase la mano una vez frente a la cámara de arriba/.test(said) && !/diga/i.test(said), 'Lee el paso y dice que pase la mano (no que diga «Siguiente»)');
+  ok(camOn() && has('Pase la mano una vez frente a la cámara'), 'Al terminar de leer, sigue mirando la cámara');
+  await passHand();
   said = await finishSpeech();
   ok(has('Primer lavado de manos') && /El reloj empieza ahora/.test(said) && has('id="t-toggle">Pausar'), 'En los pasos con reloj, el reloj arranca solo al terminar de leer');
-  hear('pausa'); await finishSpeech();
-  ok(has('id="t-toggle"') && !has('id="t-toggle">Pausar'), 'Decir "Pausa" detiene el reloj');
-  ok(/^Modo automático\./.test(speechSynthesis.spoken.find(u => /Lave el lavamanos/.test(u.text) || /^Modo automático/.test(u.text)).text), 'Al empezar el modo automático, lo primero que dice es "Modo automático." (no se corta el paso)');
-  // Salir de la app y volver: se calla, y al volver vuelve a escuchar y lee el paso en el que iba.
+  // Salir de la app y volver: se calla y apaga la cámara; al volver la enciende y lee el paso en el que iba.
   const setHidden = h => { document.hidden = h; document.onvis(); };
   setHidden(true);
-  ok(!listening() && !speechSynthesis.cur, 'Al salir de la app se callan la voz y el micrófono');
+  ok(!camOn() && !speechSynthesis.cur, 'Al salir de la app se callan la voz y la cámara');
   setHidden(false);
-  await new Promise(r => setTimeout(r, 700));
-  ok(listening() && speechSynthesis.cur && speechSynthesis.cur.text === 'Seguimos en modo automático.' && has('Primer lavado de manos'), 'Al volver a la app sigue en modo automático y lee el paso en el que iba');
+  await wait(700);
+  ok(camOn() && speechSynthesis.cur && speechSynthesis.cur.text === 'Seguimos en modo automático.' && has('Primer lavado de manos'), 'Al volver a la app sigue en modo automático y lee el paso en el que iba');
   // Cerrar la app y volver a abrirla: sigue en el mismo paso y en modo automático.
   ok(JSON.parse(store['dp-progress']).auto === true, 'Se guarda que el recambio iba en modo automático');
-  recs.forEach(r => { r.on = false; }); speechSynthesis.cur = null;
+  CAM.open = 0; speechSynthesis.cur = null;
   speechSynthesis.block = true;   // el teléfono no deja hablar hasta que se toque la pantalla
   boot();
-  await new Promise(r => setTimeout(r, 700));
-  ok(has('Primer lavado de manos') && listening() && has('Toque una vez') && has('data-act="auto-resume"'), 'Al volver a abrir la app sigue en modo automático; si el teléfono no deja hablar, pide tocar una vez');
+  await wait(700);
+  ok(has('Primer lavado de manos') && camOn() && has('Toque una vez') && has('data-act="auto-resume"'), 'Al volver a abrir la app sigue en modo automático; si el teléfono no deja hablar, pide tocar una vez');
   click({ data: { act: 'auto-resume' } });
   ok(speechSynthesis.cur && speechSynthesis.cur.text === 'Seguimos en modo automático.' && has('Leyendo'), 'Al tocar "Seguir" lee el paso en el que iba');
   click({ data: { act: 'auto-exit' } });
-  ok(!has('Le escucho') && !listening() && has('Primer lavado de manos'), 'Salir del modo automático deja el paso en modo táctil');
+  ok(!has('autobar') && !camOn() && has('Primer lavado de manos'), 'Salir del modo automático apaga la cámara y deja el paso en modo táctil');
   click({ data: { act: 'home-ask' } });
   click({ data: { act: 'home-yes' } });
 

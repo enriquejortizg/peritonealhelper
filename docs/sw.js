@@ -1,10 +1,9 @@
 // Diálisis Contigo · Copyright (C) 2026 Enrique Ortiz · SPDX-License-Identifier: GPL-3.0-or-later
 // Service worker de Diálisis Contigo: guarda la app en el teléfono para que abra sin internet.
 // Debe ser igual a APP_VERSION en index.html (la prueba lo comprueba). Al cambiarla, los teléfonos descargan la app nueva.
-const VERSION = '0.0.11.1';
+const VERSION = '0.0.12.1';
 const APP_CACHE = 'app-' + VERSION;
 const FONT_CACHE = 'fuentes';
-const VOZ_CACHE = 'voz';
 
 const APP_FILES = [
   './',
@@ -23,7 +22,8 @@ self.addEventListener('install', event => {
 self.addEventListener('activate', event => {
   event.waitUntil(
     caches.keys()
-      .then(keys => Promise.all(keys.filter(k => k.startsWith('app-') && k !== APP_CACHE).map(k => caches.delete(k))))
+      // "voz" era la caché de la voz sin internet, que se quitó en 0.0.12.1.
+      .then(keys => Promise.all(keys.filter(k => (k.startsWith('app-') && k !== APP_CACHE) || k === 'voz').map(k => caches.delete(k))))
       .then(() => self.clients.claim())
   );
 });
@@ -56,18 +56,6 @@ self.addEventListener('fetch', event => {
   }
 
   if (url.origin !== self.location.origin) return;
-
-  // Voz sin internet: vosk.js se guarda la primera vez que se descarga y no se borra al cambiar de versión.
-  // El modelo: la app lo descarga (con barra de avance) y lo deja un momento en la caché "voz"; aquí se le
-  // entrega a Vosk, que lo guarda ya descomprimido en el teléfono (IndexedDB). Después la app lo borra de la caché.
-  if (url.pathname.endsWith('/vosk/vosk.js')) {
-    event.respondWith(caches.open(VOZ_CACHE).then(cache => cache.match(req).then(hit => hit || fetch(req).then(res => { if (res.ok) cache.put(req, res.clone()); return res; }))));
-    return;
-  }
-  if (url.pathname.endsWith('/vosk/modelo-es.tar.gz')) {
-    event.respondWith(caches.open(VOZ_CACHE).then(cache => cache.match(req)).then(hit => hit || fetch(req)));
-    return;
-  }
 
   // Pantalla principal: intenta traer la versión nueva; sin internet usa la guardada.
   if (req.mode === 'navigate') {
