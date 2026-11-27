@@ -141,6 +141,8 @@ button:focus-visible, a:focus-visible, input:focus-visible { outline: 3px solid 
 .checkrow { display: grid; grid-template-columns: minmax(0, 1fr) 52px; gap: 8px; }
 .info { border: 2px solid var(--accent); background: var(--accent-soft); color: var(--accent); border-radius: 16px; cursor: pointer; display: grid; place-items: center; }
 .info svg { width: 26px; height: 26px; }
+.substeps { margin: 0; padding-left: 1.6em; display: grid; gap: 8px; font-size: 1.05em; line-height: 1.4; }
+.substeps li::marker { font-weight: 700; color: var(--accent); }
 .todo { list-style: none; margin: 0; padding: 0; display: grid; gap: 10px; }
 .todo li { display: grid; grid-template-columns: 22px minmax(0, 1fr); gap: 10px; align-items: start; }
 .todo svg { width: 20px; height: 20px; color: var(--ok); margin-top: 3px; }
@@ -369,93 +371,143 @@ html.modo-app, html.modo-app body { height: 100%; margin: 0; }
       <path d="M100 4v10"/><path d="M88 14h24v28a12 12 0 0 1-24 0z" fill="currentColor" fill-opacity=".22"/>
       <path d="M100 54v10c0 14-14 22-30 22h-6"/><circle cx="40" cy="58" r="14"/><path d="M40 72v34M26 84h28"/>
       <path d="M134 30v46M124 66l10 12 10-12"/></svg>`,
-    cap: `<svg viewBox="0 0 160 120" fill="none" stroke="currentColor" stroke-width="5" stroke-linecap="round" stroke-linejoin="round">
-      <path d="M10 62h60"/><rect x="70" y="50" width="24" height="24" rx="5"/>
-      <rect x="104" y="46" width="30" height="32" rx="8" fill="currentColor" fill-opacity=".25"/><path d="M98 62h4"/>
-      <path d="M112 22l8 8 16-16"/><text x="80" y="104" font-size="13" text-anchor="middle" fill="currentColor" stroke="none" font-family="Atkinson Hyperlegible, sans-serif" font-weight="700">tapón nuevo cada vez</text></svg>`,
+    disconnect: `<svg viewBox="0 0 160 120" fill="none" stroke="currentColor" stroke-width="5" stroke-linecap="round" stroke-linejoin="round">
+      <path d="M10 62h46"/><rect x="56" y="50" width="22" height="24" rx="5"/>
+      <rect x="96" y="50" width="22" height="24" rx="5" fill="currentColor" fill-opacity=".25"/><path d="M118 62h32"/>
+      <path d="M84 46l6 8-6 8 6 8-6 8" stroke-width="3.5"/><path d="M30 96h100" stroke-width="3" stroke-dasharray="2 8"/></svg>`,
+    cloth: `<svg viewBox="0 0 160 120" fill="none" stroke="currentColor" stroke-width="5" stroke-linecap="round" stroke-linejoin="round">
+      <rect x="40" y="14" width="80" height="80" rx="6" fill="currentColor" fill-opacity=".12"/>
+      <path d="M80 14v80M40 54h80" stroke-width="3" stroke-dasharray="6 6"/>
+      <text x="60" y="42" font-size="18" text-anchor="middle" fill="currentColor" stroke="none" font-family="Lexend, sans-serif" font-weight="700">1</text>
+      <path d="M128 30l14-8M130 42h16M128 54l14 8" stroke-width="4"/><path d="M60 108h40" stroke-width="3" opacity=".5"/></svg>`,
+    bottle: `<svg viewBox="0 0 160 120" fill="none" stroke="currentColor" stroke-width="5" stroke-linecap="round" stroke-linejoin="round">
+      <rect x="66" y="12" width="28" height="18" rx="4"/><path d="M60 36h40v66a8 8 0 0 1-8 8H68a8 8 0 0 1-8-8z" fill="currentColor" fill-opacity=".15"/>
+      <path d="M60 96l40-12M60 78l40-12M60 60l40-12" stroke-width="3.5"/><path d="M116 104V50M106 60l10-12 10 12" /></svg>`,
+    clamp: `<svg viewBox="0 0 160 120" fill="none" stroke="currentColor" stroke-width="5" stroke-linecap="round" stroke-linejoin="round">
+      <circle cx="32" cy="40" r="12"/><circle cx="32" cy="80" r="12"/>
+      <path d="M43 46l45 12M43 74l45-12"/><path d="M88 58l56-6M88 62l56 6"/><path d="M98 54l4 12M110 53l4 14M122 52l4 16" stroke-width="3"/></svg>`,
+    pole: `<svg viewBox="0 0 160 120" fill="none" stroke="currentColor" stroke-width="5" stroke-linecap="round" stroke-linejoin="round">
+      <path d="M80 18v86"/><path d="M58 18h44"/><path d="M58 18v8M102 18v8"/>
+      <path d="M80 104l-28 10M80 104l28 10M80 104v10"/><path d="M128 28v50M118 68l10 12 10-12"/></svg>`,
+    trash: `<svg viewBox="0 0 160 120" fill="none" stroke="currentColor" stroke-width="5" stroke-linecap="round" stroke-linejoin="round">
+      <path d="M46 34h68"/><path d="M68 34v-8h24v8"/><path d="M52 34l6 74h44l6-74" fill="currentColor" fill-opacity=".12"/>
+      <path d="M72 50v42M88 50v42" stroke-width="3.5"/></svg>`,
+    pack: `<svg viewBox="0 0 160 120" fill="none" stroke="currentColor" stroke-width="5" stroke-linecap="round" stroke-linejoin="round">
+      <path d="M30 30h100v70H30z" fill="currentColor" fill-opacity=".12"/><path d="M30 30l16-14h68l16 14"/>
+      <path d="M30 48h100" stroke-width="3.5" stroke-dasharray="7 6"/><path d="M118 40l16-16" /><path d="M56 66h48M56 80h30" stroke-width="3.5"/></svg>`,
+    line: `<svg viewBox="0 0 160 120" fill="none" stroke="currentColor" stroke-width="5" stroke-linecap="round" stroke-linejoin="round">
+      <path d="M18 92h124l-10 18H28z" fill="currentColor" fill-opacity=".15"/>
+      <path d="M30 86c0-24 20-34 40-34s34 10 34 22-14 14-24 8"/><rect x="104" y="78" width="22" height="12" rx="4" fill="currentColor" fill-opacity=".3"/>
+      <path d="M124 24l8 12M136 20v14M146 26l-8 10" stroke-width="4"/></svg>`,
+    handsup: `<svg viewBox="0 0 160 120" fill="none" stroke="currentColor" stroke-width="5" stroke-linecap="round" stroke-linejoin="round">
+      <path d="M50 112V64c0-5 4-9 9-9h2V30c0-4 3-7 7-7s7 3 7 7v25"/><path d="M75 52V22c0-4 3-7 7-7s7 3 7 7v32"/>
+      <path d="M89 50V28c0-4 3-7 7-7s7 3 7 7v40c0 26-14 44-30 44"/><path d="M128 54V24M118 34l10-12 10 12"/></svg>`,
+    scale: `<svg viewBox="0 0 160 120" fill="none" stroke="currentColor" stroke-width="5" stroke-linecap="round" stroke-linejoin="round">
+      <path d="M48 20h44v40a22 22 0 0 1-44 0z" fill="currentColor" fill-opacity=".2"/><path d="M70 82v6"/>
+      <rect x="24" y="88" width="92" height="22" rx="6"/><rect x="50" y="94" width="40" height="10" rx="2" stroke-width="3"/>
+      <text x="136" y="64" font-size="16" text-anchor="middle" fill="currentColor" stroke="none" font-family="Lexend, sans-serif" font-weight="700">ml</text></svg>`,
     look: `<svg viewBox="0 0 160 120" fill="none" stroke="currentColor" stroke-width="5" stroke-linecap="round" stroke-linejoin="round">
       <path d="M30 20h56v62a28 28 0 0 1-56 0z"/><path d="M30 54h56v28a28 28 0 0 1-56 0z" fill="currentColor" fill-opacity=".2" stroke="none"/>
       <path d="M100 62c8-12 18-18 26-18s18 6 26 18c-8 12-18 18-26 18s-18-6-26-18z"/><circle cx="126" cy="62" r="7" fill="currentColor"/></svg>`
   };
   const fluid = (fillColor, op, dots) => `<svg viewBox="0 0 64 64"><path d="M16 6h32v36a16 16 0 0 1-32 0z" fill="none" stroke="currentColor" stroke-width="3.5"/><path d="M16 24h32v18a16 16 0 0 1-32 0z" fill="${fillColor}" fill-opacity="${op}"/>${dots || ''}</svg>`;
 
-  // ---------- Contenido (EJEMPLO) ----------
+  // ---------- Contenido (en revisión) ----------
+  // Pasos dictados por una enfermera del servicio (27/11/2026). Falta la aprobación formal del equipo de nefrología.
   // "Antes de empezar". Cada punto tiene un detalle (botón de información) con lo que hay que hacer
   // para darlo por cumplido. Pendiente de validar con el equipo de nefrología.
   //   label: texto de la lista · items: qué hacer · ask: lo que hay que confirmar con la enfermera (opcional)
   const PREP = [
     {
-      label: 'La habitación está cerrada, sin ventilador ni mascotas',
+      label: 'El paciente se bañó y se lavó las manos',
       items: [
-        'Cierre las puertas y ventanas de la habitación.',
-        'Apague el ventilador y el aire acondicionado. El aire mueve polvo y gérmenes hacia las conexiones.',
-        'Saque a las mascotas de la habitación.',
-        'Pida que nadie entre ni salga mientras hace el recambio.'
+        'El paciente se baña antes del recambio.',
+        'Se lava bien las manos con agua y jabón.'
       ]
     },
     {
-      label: 'La mesa está limpia y desinfectada',
+      label: 'La habitación está cerrada y solo con lo necesario',
       items: [
-        'Use una mesa solo para el recambio. Quite comida, papeles y cualquier otra cosa.',
-        'Limpie la superficie con agua y jabón, y séquela.',
-        'Desinfecte la superficie con el producto que le indicó la enfermera.',
-        'Deje que se seque sola. No ponga nada encima hasta que esté seca.'
-      ],
-      ask: 'Pregunte a la enfermera qué desinfectante usar y cómo.'
-    },
-    {
-      label: 'Tengo la bolsa nueva, un tapón nuevo y las pinzas',
-      items: [
-        'Bolsa nueva, con la concentración que le indicaron.',
-        'Revise la bolsa: que no esté vencida, que no esté rota ni gotee (apriétela un poco) y que el líquido se vea transparente.',
-        'Un tapón nuevo, todavía cerrado en su empaque.',
-        'Las pinzas.',
-        'Si una bolsa está vencida, gotea o se ve turbia, no la use. Aparte otra.'
-      ],
-      ask: 'Pregunte a la enfermera si debe entibiar la bolsa y cómo hacerlo.'
-    },
-    {
-      label: 'El paciente y yo tenemos mascarilla',
-      items: [
-        'El paciente y quien hace el recambio se ponen la mascarilla antes de abrir el material.',
-        'Debe tapar la nariz y la boca, bien ajustada.',
-        'No la toque ni la baje durante el recambio. Si la toca, lávese las manos otra vez.'
+        'Deje en la habitación solo lo estrictamente necesario. Saque las cajas.',
+        'Cierre las puertas y las ventanas.',
+        'Apague el ventilador y el aire acondicionado, mejor media hora antes.',
+        'Saque a las mascotas.',
+        'Pida que nadie entre ni salga durante el recambio.'
       ]
     },
     {
       label: 'Uñas cortas, sin anillos, reloj ni pulseras',
       items: [
-        'Las uñas deben estar cortas y sin esmalte.',
+        'Las uñas, cortas y sin esmalte.',
         'Quítese anillos, pulseras y reloj.',
-        'Súbase las mangas hasta el codo.',
-        'El lavado de manos es el primer paso: de 40 a 60 segundos con agua y jabón, y secado con toalla limpia o papel.'
+        'Súbase las mangas hasta el codo.'
+      ]
+    },
+    {
+      label: 'La mesa 1 está limpia y con todo el material',
+      items: [
+        'Limpie la mesa 1 con una limpieza normal.',
+        'Ponga encima dos bolsas completas, con la concentración que le indicó el médico: una para usar y otra de repuesto, por si una se cae o tiene una fuga.',
+        'Ponga también los pañitos, la pinza, el Exsept, el alcohol y la bandeja.',
+        'Prepare una segunda mesa aparte: la mesa 2. Ahí va todo lo que ya limpió.'
+      ]
+    },
+    {
+      label: 'Lavé en la bandeja el Exsept, la pinza y el alcohol',
+      items: [
+        'En la bandeja, lave el Exsept, la pinza y el frasco de alcohol con agua y el jabón antiséptico del programa.'
       ]
     }
-  ];  // Cada paso puede tener video: ruta del archivo, por ejemplo video: 'videos/lavado-manos.mp4'.
+  ];
+  // Cada paso puede tener video: ruta del archivo, por ejemplo video: 'videos/lavado-manos.mp4'.
   // Sin video, el botón "Ver video" aparece deshabilitado.
+  //   items: subpasos opcionales, se muestran como lista numerada y se leen con Escuchar.
+  const WASH = 'Frote las manos hasta que termine el reloj';
   const STEPS = [
-    { pic: 'hands', title: 'Lávese las manos', text: 'Lave sus manos con agua y jabón. Frote entre los dedos y debajo de las uñas. Séquelas con una toalla de papel.', tip: 'No toque nada más después de lavarse. Si toca algo, vuelva a lavarse.', timer: 60, timerLabel: 'Frote las manos hasta que termine el reloj' },
-    { pic: 'mask', title: 'Póngase la mascarilla', text: 'Usted y el paciente se ponen la mascarilla. Debe tapar la nariz y la boca.' },
-    { pic: 'table', title: 'Prepare la mesa', text: 'Ponga en la mesa limpia la bolsa nueva, el tapón nuevo y las pinzas.' },
-    { pic: 'inspect', title: 'Revise la bolsa', text: 'Mire la fecha de caducidad y la concentración. El líquido debe verse transparente. Apriete la bolsa para ver que no gotee.', tip: 'Si la bolsa gotea, está vencida o el líquido se ve turbio, no la use. Use otra.' },
-    { pic: 'connect', title: 'Conecte la línea', text: 'Quite el tapón del catéter y conecte la línea de la bolsa. No toque las puntas con los dedos.', tip: 'Si una punta toca algo, no conecte. Llame al hospital.' },
-    { pic: 'drain', title: 'Drene el líquido', text: 'Ponga la bolsa vacía en el suelo, más abajo del paciente. Abra la pinza. El líquido usado sale solo.', timer: 20 * 60, timerLabel: 'Tiempo de drenaje' },
-    { pic: 'flush', title: 'Lave la línea', text: 'Cierre la pinza del paciente. Deje pasar el líquido nuevo hacia la bolsa de drenaje mientras cuenta hasta 5.', timer: 5, timerLabel: 'Cuente hasta 5' },
-    { pic: 'fill', title: 'Pase el líquido nuevo', text: 'Cuelgue la bolsa nueva en alto. Abra la pinza del paciente. El líquido nuevo entra solo.', timer: 10 * 60, timerLabel: 'Tiempo de infusión' },
-    { pic: 'cap', title: 'Desconecte y tape', text: 'Cierre las pinzas. Desconecte la línea y ponga un tapón nuevo en el catéter.', tip: 'Use siempre un tapón nuevo. Nunca reutilice el anterior.' },
-    { pic: 'look', title: 'Mire el líquido drenado', text: 'Mire la bolsa con el líquido que salió. En la siguiente pantalla le preguntaremos cómo se ve.' }
+    { pic: 'hands', title: 'Lave el lavamanos', text: 'Lave el lavamanos con jabón y enjuáguelo.' },
+    { pic: 'mask', title: 'Póngase la mascarilla', text: 'Usted y el paciente se ponen la mascarilla. Debe tapar la nariz y la boca.', tip: 'No la toque más. Si la toca, lávese las manos otra vez.' },
+    { pic: 'hands', title: 'Primer lavado de manos', text: 'Lávese las manos con agua y jabón. Enjuague con las manos hacia arriba. No las sacuda.', tip: 'Séquese con una servilleta y cierre el grifo con esa misma servilleta.', timer: 60, timerLabel: WASH },
+    { pic: 'cloth', title: 'Doble el paño', text: 'Doble el pañito dos veces, hasta que quede un cuadrado. Va a usar una cara distinta para cada cosa.',
+      items: ['Cara 1: la que se ve.', 'Cara 2: el otro lado.', 'Caras 3 y 4: voltee el segundo doblez.', 'Cara 5: abra el paño y use el lado que nunca se tocó.'] },
+    { pic: 'table', title: 'Cara 1: limpie la mesa 2', text: 'Ponga alcohol en el paño, no en la mesa. Limpie de adentro hacia afuera. Al final limpie los bordes y termine donde empezó.', tip: 'El último borde es el que está delante de usted.' },
+    { pic: 'inspect', title: 'Cara 2: limpie las bolsas', text: 'Ponga alcohol en la cara 2. Limpie la bolsa de arriba hacia abajo, sin devolverse, por todos los pliegues. Póngala en la mesa 2.', tip: 'Limpie también el borde por donde la agarró. Haga lo mismo con la bolsa de repuesto.' },
+    { pic: 'bottle', title: 'Cara 3: limpie el Exsept', text: 'Ponga alcohol en la cara 3. Frote primero la base y luego suba en forma de tornillo hasta la tapa.', tip: 'Quite la tapa con el paño, sin tocarla con la mano. Déjela boca abajo. Ponga el Exsept en la mesa 2.' },
+    { pic: 'clamp', title: 'Cara 4: limpie la pinza', text: 'Ponga alcohol en la cara 4. Abra la pinza y límpiela completa. Póngala en la mesa 2.' },
+    { pic: 'pole', title: 'Cara 5: limpie el paral', text: 'Abra el paño y ponga alcohol en el lado que nunca se tocó. Limpie el paral de adentro hacia afuera y de arriba hacia abajo, hasta la base.' },
+    { pic: 'trash', title: 'Bote el paño', text: 'Bote el pañito. Ya no se vuelve a usar.' },
+    { pic: 'hands', title: 'Segundo lavado de manos', text: 'Lávese las manos otra vez con agua y jabón. Séquese con un pañito limpio.', tip: 'Este lavado es para abrir el empaque y preparar la línea.', timer: 60, timerLabel: WASH },
+    { pic: 'pack', title: 'Abra el empaque', text: 'Rasgue el empaque de la bolsa por las pestañas. Deje el material a su derecha.', tip: 'No saque todavía nada de adentro.' },
+    { pic: 'line', title: 'Prepare la línea del paciente', text: 'Ponga un pañito limpio. Saque la línea de la fajita del paciente y póngala sobre el pañito.', tip: 'Revise que la línea esté cerrada. El paciente puede ayudar.' },
+    { pic: 'line', title: 'Rocíe la línea con alcohol', text: 'Rocíe con alcohol la línea que está sobre el pañito.' },
+    { pic: 'hands', title: 'Lavado de manos quirúrgico', text: 'Lávese las manos con agua y jabón durante 5 minutos. Mantenga las manos a la altura del pecho. Haga cada movimiento 10 veces.', timer: 5 * 60, timerLabel: 'Lave hasta que termine el reloj',
+      items: ['Palma con palma.', 'Palma con dorso, en las dos manos.', 'Dedo por dedo.', 'Uñas y cutícula.', 'Candadito: los dedos entrelazados.', 'Los pulgares, con los dedos de su misma mano.', 'Entre los dedos, hacia afuera y luego hacia adentro.', 'De la muñeca al codo, en círculos.'] },
+    { pic: 'hands', title: 'Enjuague y seque', text: 'Enjuague sin juntar las manos: primero las manos y luego hacia el codo. No las sacuda. Seque sin frotar con un pañito limpio: una mano con cada cara.', tip: 'Si el lavamanos está fuera de la habitación, cúbrase las manos con la servilleta y abra la puerta con ella.' },
+    { pic: 'handsup', title: 'No toque nada más', text: 'Desde ahora, lleve las manos hacia arriba. Toque solo el material, ni siquiera su cara.', tip: 'Si toca algo, vuelva a lavarse las manos.' },
+    { pic: 'inspect', title: 'Saque la bolsa y revísela', text: 'Saque el paquete con su mano dominante y bote el empaque. Revise la concentración (el color del tapón), la fecha de vencimiento y que no tenga fugas.', tip: 'Si la bolsa tiene una fuga, use la bolsa de repuesto.' },
+    { pic: 'pack', title: 'Separe la bolsa de drenaje', text: 'Voltee el paquete y quite los precintos. Bótelos hacia la derecha. Quite la bolsa que envuelve la bolsa de drenaje y despegue las líneas.', tip: 'Despegue bien la bolsa de drenaje. Si queda pegada, el líquido no sale bien.' },
+    { pic: 'fill', title: 'Cuelgue la bolsa', text: 'Cuelgue en el paral solo la bolsa de solución. Ponga la bolsa de drenaje en el suelo.' },
+    { pic: 'clamp', title: 'Ponga la pinza', text: 'Ponga la pinza en la línea de infusión, que es la línea blanca.' },
+    { pic: 'connect', title: 'Sostenga las líneas', text: 'Agarre la línea de infusión por el acople verde, sin rozar la punta. Sostenga la cámara azul entre el dedo índice y el medio. Con el pulgar, sostenga la línea del paciente.' },
+    { pic: 'connect', title: 'Quite los tapones y ponga Exsept', text: 'Afloje los dos tapones, primero el más lejano al paciente, y quítelos. Ponga un puff de Exsept en cada punta, a unos 10 centímetros.', tip: 'No toque las puntas.' },
+    { pic: 'connect', title: 'Conecte', text: 'Conecte sin apuro.', tip: 'Cuide de no halar el catéter.' },
+    { pic: 'drain', title: 'Drene el líquido', text: 'Abra la línea del paciente. Si sale líquido, espere a que salga todo. Luego cierre la línea.', tip: 'Usted verá cuándo termina: el líquido deja de salir.' },
+    { pic: 'flush', title: 'Saque el aire de la línea', text: 'Con la línea del paciente cerrada, rompa el acople verde y quite la pinza. Cuente hasta 5. Luego ponga la pinza en la línea de drenaje.', tip: 'El aire en la barriga da mucho dolor.', timer: 5, timerLabel: 'Cuente hasta 5' },
+    { pic: 'fill', title: 'Pase el líquido nuevo', text: 'Revise que no quede aire en la línea blanca. Abra la línea del paciente y deje pasar todo el líquido.', tip: 'Usted verá cuándo termina: la bolsa queda vacía.' },
+    { pic: 'disconnect', title: 'Desconecte', text: 'Siga estos pasos en orden.', tip: 'El líquido queda en la barriga el tiempo que le indicó el médico.',
+      items: ['Cierre la línea del paciente.', 'Cierre el obturador inviolable.', 'Ponga la pinza en las dos líneas.', 'Baje la bolsa.', 'Rompa el acople rojo.', 'Acorte la línea y guárdela en la fajita.'] },
+    { pic: 'scale', title: 'Pese y mire el líquido', text: 'Pese la bolsa de drenaje. Mire el líquido que salió. En la siguiente pantalla le preguntaremos cómo se ve.' }
   ];
   const ALARMS = [
     { key: 'turbio', title: 'Líquido turbio', icon: fluid('#c9b27a', '.9', '<g fill="#8a7440"><circle cx="26" cy="38" r="2"/><circle cx="36" cy="44" r="2"/><circle cx="30" cy="50" r="2"/><circle cx="40" cy="34" r="2"/></g>'), what: 'Puede ser una infección (peritonitis).', todo: 'Guarde la bolsa sin tirarla y llame hoy mismo al hospital.' },
     { key: 'sangre', title: 'Líquido con sangre', icon: fluid('#c0392b', '.65'), what: 'Puede tener varias causas.', todo: 'Guarde la bolsa y llame al hospital para avisar.' },
-    { key: 'nodrena', title: 'El líquido no sale', icon: '<svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M12 3v12M7 10l5 5 5-5"/><path d="M4 21h16"/><path d="M5 5l14 14"/></svg>', what: 'La línea puede estar doblada o tapada.', todo: 'Revise que las pinzas estén abiertas y la línea sin dobleces. Si sigue sin salir, llame al hospital.' },
+    { key: 'nodrena', title: 'El líquido no sale', icon: '<svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M12 3v12M7 10l5 5 5-5"/><path d="M4 21h16"/><path d="M5 5l14 14"/></svg>', what: 'La línea puede estar doblada o tapada.', todo: 'Revise que la línea esté abierta y sin dobleces, y que la bolsa de drenaje esté despegada. Si sigue sin salir, llame al hospital.' },
     { key: 'fiebre', title: 'Fiebre o escalofríos', icon: '<svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M10 14V5a2 2 0 0 1 4 0v9a4 4 0 1 1-4 0z"/><path d="M12 9v8"/></svg>', what: 'Puede ser una infección.', todo: 'Tome la temperatura y llame al hospital.' },
     { key: 'dolor', title: 'Dolor fuerte de panza', icon: '<svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><circle cx="12" cy="12" r="8"/><path d="M8.5 9.5l2 1M15.5 9.5l-2 1M9 16c1.8-1.5 4.2-1.5 6 0"/></svg>', what: 'Sobre todo si viene con líquido turbio.', todo: 'Llame al hospital. No espere al día siguiente.' },
     { key: 'orificio', title: 'Orificio rojo o con pus', icon: '<svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><circle cx="12" cy="12" r="3"/><circle cx="12" cy="12" r="7" stroke-dasharray="2 3"/><path d="M12 15v6"/></svg>', what: 'La piel alrededor del catéter está roja, hinchada, duele o sale pus.', todo: 'Mantenga limpio el orificio y llame al hospital.' }
   ];
   const APP_NAME = 'Diálisis Contigo';
   // Versión: PRODUCCIÓN.GRANDE.RELEASE.MENOR (ver CLAUDE.md). Debe ser igual a VERSION en sw.js.
-  const APP_VERSION = '0.0.4.1';
+  const APP_VERSION = '0.0.5.1';
 
   // ---------- Configuración de cada familia ----------
   // Se llena en la configuración inicial y se guarda solo en este teléfono.
@@ -781,8 +833,9 @@ html.modo-app, html.modo-app body { height: 100%; margin: 0; }
         <h2 class="scr">${st.title}</h2>
         <div class="pic" role="img" aria-label="${st.title}">${P[st.pic]}</div>
         <p class="steptext">${st.text}</p>
+        ${st.items ? `<ol class="substeps">${st.items.map(x => `<li>${x}</li>`).join('')}</ol>` : ''}
         <div class="media">
-          ${sayBtn(`${st.title}. ${st.text} ${st.tip || ''}`.trim())}
+          ${sayBtn(`${st.title}. ${st.text} ${st.items ? st.items.join(' ') : ''} ${st.tip || ''}`.replace(/\s+/g, ' ').trim())}
           ${st.video
             ? `<button class="listen" data-act="video">${I.video}Ver video</button>`
             : `<button class="listen" disabled title="Todavía no hay video para este paso">${I.video}Ver video</button>`}
@@ -813,7 +866,7 @@ html.modo-app, html.modo-app body { height: 100%; margin: 0; }
         <div class="field">
           <label for="vol">Líquido que salió (ml)</label>
           <div class="stepper"><button data-adj="vol" data-d="-50" aria-label="Menos 50">−</button><input id="vol" inputmode="numeric" value="${S.reg.vol}"><button data-adj="vol" data-d="50" aria-label="Más 50">+</button></div>
-          <span class="hint">Pese la bolsa o lea la marca de la bolsa.</span>
+          <span class="hint">Pese la bolsa de drenaje y anote cuántos ml salieron.</span>
         </div>
         <div class="field">
           <label for="peso">Peso del paciente (kg)</label>
