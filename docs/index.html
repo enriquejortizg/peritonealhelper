@@ -156,6 +156,22 @@ button:focus-visible, a:focus-visible, input:focus-visible { outline: 3px solid 
 .info svg { width: 26px; height: 26px; }
 .substeps { margin: 0; padding-left: 1.6em; display: grid; gap: 8px; font-size: 1.05em; line-height: 1.4; }
 .substeps li::marker { font-weight: 700; color: var(--accent); }
+.subof { margin: -6px 0 0; color: var(--muted); font-weight: 700; font-size: .95em; }
+.subintro { margin: 0; font-weight: 700; }
+.subdots { display: flex; gap: 6px; }
+.foot .stack { flex: 1; display: grid; gap: 10px; }
+.autonote { display: grid; grid-template-columns: 24px minmax(0,1fr); gap: 10px; align-items: start; font-size: .95em; }
+.autonote svg { width: 22px; height: 22px; color: var(--accent); }
+.autobar { display: grid; grid-template-columns: 40px minmax(0,1fr) auto; gap: 10px; align-items: center; padding: 10px 12px; border-radius: 16px; border: 2px solid var(--line); background: var(--surface-2); font-weight: 700; font-size: .95em; }
+.autobar .mic { width: 40px; height: 40px; border-radius: 50%; display: grid; place-items: center; background: var(--line); color: var(--ink); }
+.autobar .mic svg { width: 22px; height: 22px; }
+.autobar.on { border-color: var(--accent); }
+.autobar.on .mic { background: var(--accent); color: var(--on-accent); animation: latido 1.4s ease-in-out infinite; }
+.autobar button { border: 1px solid var(--line); background: var(--surface); color: var(--ink); border-radius: 12px; min-height: 44px; padding: 0 14px; font: 700 .95em var(--font-body); cursor: pointer; }
+@keyframes latido { 50% { transform: scale(1.12); } }
+@media (prefers-reduced-motion: reduce) { .autobar.on .mic { animation: none; } }
+.subdots i { width: 12px; height: 12px; border-radius: 50%; background: var(--line); }
+.subdots i.on { background: var(--accent); }
 .todo { list-style: none; margin: 0; padding: 0; display: grid; gap: 10px; }
 .todo li { display: grid; grid-template-columns: 22px minmax(0, 1fr); gap: 10px; align-items: start; }
 .todo svg { width: 20px; height: 20px; color: var(--ok); margin-top: 3px; }
@@ -301,6 +317,7 @@ html.modo-app, html.modo-app body { height: 100%; margin: 0; }
       <li><span class="dot" data-i="play"></span><div><b>Recambio de práctica</b><span>Al terminar la configuración se puede practicar un recambio completo sin que se anote en el registro.</span></div></li>
       <li><span class="dot" data-i="steps"></span><div><b>Un paso por pantalla</b><span>Dibujo grande, frase corta y botón grande de Siguiente. Hecho para personas nerviosas o con poca práctica leyendo.</span></div></li>
       <li><span class="dot" data-i="speaker"></span><div><b>Cada paso se escucha</b><span>El botón Escuchar lee el paso en voz alta. En la versión real se usarían audios grabados por las enfermeras del servicio.</span></div></li>
+      <li><span class="dot" data-i="mic"></span><div><b>Modo automático</b><span>Con las manos ya lavadas, la app lee cada paso y avanza cuando el familiar dice «Siguiente». Si no hay voz, se tapa la cámara con la mano.</span></div></li>
       <li><span class="dot" data-i="clock"></span><div><b>Temporizadores</b><span>Lavado de manos, drenaje e infusión llevan su propio reloj con aviso al terminar. Hay un botón para adelantarlo en la demostración.</span></div></li>
       <li><span class="dot" data-i="alert"></span><div><b>Señales de alarma</b><span>Si el líquido sale turbio o con sangre, la app lo indica y muestra el teléfono que se configuró.</span></div></li>
       <li><span class="dot" data-i="list"></span><div><b>Registro y recordatorios</b><span>Hora, volumen drenado y aspecto del líquido, guardados en el teléfono. Los horarios salen de la configuración.</span></div></li>
@@ -336,6 +353,8 @@ html.modo-app, html.modo-app body { height: 100%; margin: 0; }
     chev: '<svg class="chev" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="M6 9l6 6 6-6"/></svg>',
     play: '<svg viewBox="0 0 24 24" fill="currentColor"><path d="M7 4.5v15l12-7.5z"/></svg>',
     pause: '<svg viewBox="0 0 24 24" fill="currentColor"><rect x="6" y="5" width="4" height="14" rx="1"/><rect x="14" y="5" width="4" height="14" rx="1"/></svg>',
+    mic: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="3" width="6" height="11" rx="3"/><path d="M5.5 11a6.5 6.5 0 0 0 13 0M12 17.5V21"/></svg>',
+    hand: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M8 12V5.5a1.5 1.5 0 0 1 3 0V11M11 10V4a1.5 1.5 0 0 1 3 0v7M14 10.5V5.5a1.5 1.5 0 0 1 3 0V14a7 7 0 0 1-7 7 6 6 0 0 1-5-2.7L3.2 15a1.5 1.5 0 0 1 2.5-1.7L8 15.5"/></svg>',
     stop: '<svg viewBox="0 0 24 24" fill="currentColor"><rect x="6" y="6" width="12" height="12" rx="2"/></svg>',
     video: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linejoin="round"><rect x="3" y="6" width="13" height="12" rx="2"/><path d="M16 10l5-3v10l-5-3z"/></svg>',
     info: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><circle cx="12" cy="12" r="9"/><path d="M12 11v6M12 7.5v.01"/></svg>',
@@ -474,7 +493,11 @@ html.modo-app, html.modo-app body { height: 100%; margin: 0; }
   ];
   // Cada paso puede tener video: ruta del archivo, por ejemplo video: 'videos/lavado-manos.mp4'.
   // Sin video, el botón "Ver video" aparece deshabilitado.
-  //   items: subpasos opcionales, se muestran como lista numerada y se leen con Escuchar.
+  //   items: lista corta opcional, se muestra numerada en la misma pantalla y se lee con Escuchar.
+  //   subs: subpasos con pantalla propia, para los pasos que hay que explicar uno por uno.
+  //     Cada subpaso: { title, text (opcional), tip (opcional), pic (opcional, si no usa el del paso), video (opcional) }.
+  //     El paso se muestra primero con el resumen y el reloj, y luego cada subpaso en su pantalla.
+  //   subLabel: cómo se llama cada subpaso en pantalla ("Movimiento 3 de 8"). Por defecto, "Parte".
   const WASH = 'Frote las manos hasta que termine el reloj';
   const STEPS = [
     { pic: 'hands', title: 'Lave el lavamanos', text: 'Lave el lavamanos con jabón y enjuáguelo.' },
@@ -492,8 +515,17 @@ html.modo-app, html.modo-app body { height: 100%; margin: 0; }
     { pic: 'pack', title: 'Abra el empaque', text: 'Rasgue el empaque de la bolsa por las pestañas. Deje el material a su derecha.', tip: 'No saque todavía nada de adentro.' },
     { pic: 'line', title: 'Prepare la línea del paciente', text: 'Ponga un pañito limpio. Saque la línea de la fajita del paciente y póngala sobre el pañito.', tip: 'Revise que la línea esté cerrada. El paciente puede ayudar.' },
     { pic: 'line', title: 'Rocíe la línea con alcohol', text: 'Rocíe con alcohol la línea que está sobre el pañito.' },
-    { pic: 'hands', title: 'Lavado de manos quirúrgico', text: 'Lávese las manos con agua y jabón durante 5 minutos. Mantenga las manos a la altura del pecho. Haga cada movimiento 10 veces.', timer: 5 * 60, timerLabel: 'Lave hasta que termine el reloj',
-      items: ['Palma con palma.', 'Palma con dorso, en las dos manos.', 'Dedo por dedo.', 'Uñas y cutícula.', 'Candadito: los dedos entrelazados.', 'Los pulgares, con los dedos de su misma mano.', 'Entre los dedos, hacia afuera y luego hacia adentro.', 'De la muñeca al codo, en círculos.'] },
+    { pic: 'hands', title: 'Lavado de manos quirúrgico', text: 'Lávese las manos con agua y jabón durante 5 minutos. Mantenga las manos a la altura del pecho. Haga cada movimiento 10 veces.', timer: 5 * 60, timerLabel: 'Lave hasta que termine el reloj', subLabel: 'Movimiento',
+      subs: [
+        { title: 'Palma con palma', text: 'Palma con palma. Hágalo 10 veces.' },
+        { title: 'Palma con dorso', text: 'Palma con dorso, en las dos manos. Hágalo 10 veces.' },
+        { title: 'Dedo por dedo', text: 'Dedo por dedo. Hágalo 10 veces.' },
+        { title: 'Uñas y cutícula', text: 'Uñas y cutícula. Hágalo 10 veces.' },
+        { title: 'Candadito', text: 'Los dedos entrelazados. Hágalo 10 veces.' },
+        { title: 'Los pulgares', text: 'Los pulgares, con los dedos de su misma mano. Hágalo 10 veces.' },
+        { title: 'Entre los dedos', text: 'Entre los dedos, hacia afuera y luego hacia adentro. Hágalo 10 veces.' },
+        { title: 'De la muñeca al codo', text: 'De la muñeca al codo, en círculos. Hágalo 10 veces.' }
+      ] },
     { pic: 'hands', title: 'Enjuague y seque', text: 'Enjuague sin juntar las manos: primero las manos y luego hacia el codo. No las sacuda. Seque sin frotar con un pañito limpio: una mano con cada cara.', tip: 'Si el lavamanos está fuera de la habitación, cúbrase las manos con la servilleta y abra la puerta con ella.' },
     { pic: 'handsup', title: 'No toque nada más', text: 'Desde ahora, lleve las manos hacia arriba. Toque solo el material, ni siquiera su cara.', tip: 'Si toca algo, vuelva a lavarse las manos.' },
     { pic: 'inspect', title: 'Saque la bolsa y revísela', text: 'Saque el paquete con su mano dominante y bote el empaque. Revise la concentración (el color del tapón), la fecha de vencimiento y que no tenga fugas.', tip: 'Si la bolsa tiene una fuga, use la bolsa de repuesto.' },
@@ -507,7 +539,14 @@ html.modo-app, html.modo-app body { height: 100%; margin: 0; }
     { pic: 'flush', title: 'Saque el aire de la línea', text: 'Con la línea del paciente cerrada, rompa el acople verde y quite la pinza. Cuente hasta 5. Luego ponga la pinza en la línea de drenaje.', tip: 'El aire en la barriga da mucho dolor.', timer: 5, timerLabel: 'Cuente hasta 5' },
     { pic: 'fill', title: 'Pase el líquido nuevo', text: 'Revise que no quede aire en la línea blanca. Abra la línea del paciente y deje pasar todo el líquido.', tip: 'Usted verá cuándo termina: la bolsa queda vacía.' },
     { pic: 'disconnect', title: 'Desconecte', text: 'Siga estos pasos en orden.', tip: 'El líquido queda en la barriga el tiempo que le indicó el médico.',
-      items: ['Cierre la línea del paciente.', 'Cierre el obturador inviolable.', 'Ponga la pinza en las dos líneas.', 'Baje la bolsa.', 'Rompa el acople rojo.', 'Acorte la línea y guárdela en la fajita.'] },
+      subs: [
+        { title: 'Cierre la línea del paciente' },
+        { title: 'Cierre el obturador inviolable' },
+        { title: 'Ponga la pinza en las dos líneas' },
+        { title: 'Baje la bolsa' },
+        { title: 'Rompa el acople rojo' },
+        { title: 'Acorte la línea y guárdela en la fajita' }
+      ] },
     { pic: 'scale', title: 'Pese y mire el líquido', text: 'Pese la bolsa de drenaje. Mire el líquido que salió. En la siguiente pantalla le preguntaremos cómo se ve.' }
   ];
   const ALARMS = [
@@ -520,7 +559,7 @@ html.modo-app, html.modo-app body { height: 100%; margin: 0; }
   ];
   const APP_NAME = 'Diálisis Contigo';
   // Versión: PRODUCCIÓN.GRANDE.RELEASE.MENOR (ver CLAUDE.md). Debe ser igual a VERSION en sw.js.
-  const APP_VERSION = '0.0.6.1';
+  const APP_VERSION = '0.0.7.1';
 
   // ---------- Configuración de cada familia ----------
   // Se llena en la configuración inicial y se guarda solo en este teléfono.
@@ -537,6 +576,18 @@ html.modo-app, html.modo-app body { height: 100%; margin: 0; }
   const EXAMPLE = { patient: 'Rosa', carer: 'Su hija Ana', mode: 'manual', count: 4, times: SCHEDULES[4].slice(), bag: BAG_ML, unit: DEFAULTS.unit, phone: DEFAULTS.phone };
   const newDraft = () => ({ patient: '', carer: '', mode: 'manual', count: 4, times: SCHEDULES[4].slice(), bag: BAG_ML, unit: DEFAULTS.unit, phone: DEFAULTS.phone });
   const clone = o => JSON.parse(JSON.stringify(o));
+  const nSubs = st => (st && st.subs ? st.subs.length : 0);
+  // Lo que se ve ahora: el paso o, si está en un subpaso, ese subpaso.
+  const subCount = st => { const n = nSubs(st); return n ? `${n} ${(st.subLabel || 'Parte') === 'Movimiento' ? 'movimientos' : 'partes'}` : ''; };
+  // Texto que se lee con Escuchar (y en el modo automático) en el paso o subpaso actual.
+  function stepSay() {
+    const st = STEPS[S.step];
+    let t;
+    if (S.sub > 0 && st.subs) { const sb = st.subs[S.sub - 1]; t = `${st.subLabel || 'Parte'} ${S.sub} de ${nSubs(st)}. ${sb.title}. ${sb.text || ''} ${sb.tip || ''}`; }
+    else t = `${st.title}. ${st.text} ${st.items ? st.items.join(' ') : ''} ${nSubs(st) ? `Son ${subCount(st)}. Le explicamos cada uno.` : ''} ${st.tip || ''}`;
+    return t.replace(/\s+/g, ' ').trim();
+  }
+  const curStep = () => { const st = STEPS[S.step]; return S.sub > 0 && st.subs ? st.subs[S.sub - 1] : st; };
   const esc = s => String(s == null ? '' : s).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
   function loadCfg() { try { const c = JSON.parse(localStorage.getItem('dp-config') || 'null'); if (!c || !c.patient) return null; c.bag = BAG_ML; if (!SCHEDULES[c.count]) { c.count = 4; c.times = c.times.slice(0, 4); } return c; } catch (e) { return null; } }
   function saveCfg() { try { localStorage.setItem('dp-config', JSON.stringify(CFG)); } catch (e) {} }
@@ -553,7 +604,7 @@ html.modo-app, html.modo-app body { height: 100%; margin: 0; }
 
   // ---------- Estado ----------
   const S = {
-    screen: CFG ? 'home' : 'welcome', step: 0, checks: PREP.map(() => false), large: false,
+    screen: CFG ? 'home' : 'welcome', step: 0, sub: 0, checks: PREP.map(() => false), large: false,
     timer: null, remaining: 0, total: 0, running: false, done: false,
     reg: { vol: BAG_ML, peso: '' }, aspect: 'claro', alarmOpen: null,
     draft: newDraft(), fromSummary: false, fromQR: false, practice: false, confirmReset: false, scanT: null,
@@ -581,7 +632,8 @@ html.modo-app, html.modo-app body { height: 100%; margin: 0; }
   // ---------- Voz y sonido ----------
   // El texto se lee frase por frase: así "Pausar" puede continuar después desde la frase en curso.
   // (La pausa propia del navegador no es confiable en Android.)
-  const SP = { key: null, parts: [], idx: 0, state: 'idle' };
+  // done: qué hacer al terminar de leer todo (lo usa el modo automático para volver a escuchar).
+  const SP = { key: null, parts: [], idx: 0, state: 'idle', done: null };
   const canSpeak = () => { try { return !!window.speechSynthesis && typeof SpeechSynthesisUtterance !== 'undefined'; } catch (e) { return false; } };
   function utter(text) {
     const u = new SpeechSynthesisUtterance(text);
@@ -592,10 +644,11 @@ html.modo-app, html.modo-app body { height: 100%; margin: 0; }
   }
   function speakNext() {
     if (SP.state !== 'playing') return;
-    if (SP.idx >= SP.parts.length) { sayStop(); return; }
+    if (SP.idx >= SP.parts.length) { const cb = SP.done; sayStop(); if (cb) cb(); return; }
     const key = SP.key, idx = SP.idx, u = utter(SP.parts[idx]);
     u.onend = () => { if (SP.state !== 'playing' || SP.key !== key || SP.idx !== idx) return; SP.idx++; speakNext(); };
-    u.onerror = e => { if (e && e.error !== 'interrupted' && e.error !== 'canceled' && SP.state === 'playing' && SP.key === key) sayStop(); };
+    // Si la voz falla, se sigue igual (el modo automático vuelve a escuchar aunque no se haya podido leer).
+    u.onerror = e => { if (e && e.error !== 'interrupted' && e.error !== 'canceled' && SP.state === 'playing' && SP.key === key) { const cb = SP.done; sayStop(); if (cb) cb(); } };
     speechSynthesis.speak(u);
   }
   // Escuchar → Pausar → Continuar (desde donde iba). Detener → la próxima vez empieza desde el principio.
@@ -603,15 +656,19 @@ html.modo-app, html.modo-app body { height: 100%; margin: 0; }
     if (!canSpeak()) { toast('Este teléfono no puede leer en voz alta. En la app real se usarán audios grabados.'); return; }
     if (SP.key === text && SP.state === 'playing') { SP.state = 'paused'; speechSynthesis.cancel(); }
     else if (SP.key === text && SP.state === 'paused') { SP.state = 'playing'; speakNext(); }
-    else {
-      speechSynthesis.cancel();
-      Object.assign(SP, { key: text, parts: String(text).split(/(?<=[.!?])\s+/).map(s => s.trim()).filter(Boolean), idx: 0, state: 'playing' });
-      speakNext();
-    }
+    else { speakParts(text, AUTO.on ? autoListen : null); return; }
+    render();
+  }
+  function speakParts(text, done) {
+    stopListen();
+    if (!canSpeak()) { render(); if (done) done(); return; }
+    try { speechSynthesis.cancel(); } catch (e) {}
+    Object.assign(SP, { key: text, parts: String(text).split(/(?<=[.!?])\s+/).map(s => s.trim()).filter(Boolean), idx: 0, state: 'playing', done: done || null });
+    speakNext();
     render();
   }
   function sayStop() { stopSpeak(); render(); }
-  function stopSpeak() { Object.assign(SP, { key: null, parts: [], idx: 0, state: 'idle' }); try { speechSynthesis.cancel(); } catch (e) {} }
+  function stopSpeak() { Object.assign(SP, { key: null, parts: [], idx: 0, state: 'idle', done: null }); try { speechSynthesis.cancel(); } catch (e) {} }
   function announce(text) { stopSpeak(); if (!canSpeak()) return; try { speechSynthesis.speak(utter(text)); } catch (e) {} }
   function sayBtn(text) {
     if (SP.key === text && SP.state !== 'idle') return `<div class="say">
@@ -681,7 +738,7 @@ html.modo-app, html.modo-app body { height: 100%; margin: 0; }
     else { beep(); announceDone(); }
     if (S.screen === 'step' && !S.modal) render();
   }
-  function announceDone() { S.announced = true; announce('Tiempo terminado. Puede pasar al siguiente paso.'); }
+  function announceDone() { S.announced = true; if (AUTO.on) autoSay(`Tiempo terminado. ${autoHint()}`); else announce('Tiempo terminado. Puede pasar al siguiente paso.'); }
   function askNotify() { try { if ('Notification' in window && Notification.permission === 'default') Notification.requestPermission(); } catch (e) {} }
   function notifyDone() {
     try {
@@ -694,7 +751,7 @@ html.modo-app, html.modo-app body { height: 100%; margin: 0; }
   }
   // Mantiene la pantalla encendida mientras corre el reloj, para que el teléfono no frene la app.
   function keepAwake() { try { if (navigator.wakeLock && !S.wake) navigator.wakeLock.request('screen').then(l => { S.wake = l; l.addEventListener('release', () => { S.wake = null; }); }).catch(() => {}); } catch (e) {} }
-  function releaseWake() { try { if (S.wake) S.wake.release(); } catch (e) {} S.wake = null; }
+  function releaseWake(force) { if (AUTO.on && !force) return; try { if (S.wake) S.wake.release(); } catch (e) {} S.wake = null; }
   function paintTimer() {
     const c = app.querySelector('.timer .clock'), r = app.querySelector('.ring b');
     if (c) c.textContent = fmt(S.remaining);
@@ -745,11 +802,160 @@ html.modo-app, html.modo-app body { height: 100%; margin: 0; }
           <button class="btn ghost wide" data-act="modal-close">Cerrar</button>
         </div></div></div>`;
     }
-    const st = STEPS[S.step];
+    const st = curStep();
     return `<div class="modal" role="dialog" aria-modal="true" aria-labelledby="m-t"><div class="sheet">
       <h3 id="m-t">${st.title}</h3>
       <video src="${esc(st.video)}" controls autoplay playsinline></video>
       <button class="btn ghost wide" data-act="modal-close">Cerrar video</button></div></div>`;
+  }
+
+  // ---------- Modo automático ----------
+  // Para cuando el familiar ya tiene las manos lavadas y no puede tocar el teléfono:
+  // la app lee cada paso y espera a que diga "Siguiente". Si el teléfono no puede reconocer la voz
+  // (sin internet, sin permiso o sin soporte), se sigue tapando la cámara de adelante con la mano.
+  // El micrófono se apaga mientras la app habla, para que no se oiga a sí misma.
+  const AUTO = { on: false, how: null, rec: null, want: false, fails: [], lastMiss: 0, cam: null, camWant: false };
+  const Rec = () => window.SpeechRecognition || window.webkitSpeechRecognition;
+  const COMMANDS = [
+    ['next', /\b(siguiente|listo|lista|continuar|continue|adelante|avanzar)\b/],
+    ['repeat', /\b(repetir|repita|repite|otra vez|de nuevo)\b/],
+    ['prev', /\b(atras|anterior|volver|regresar)\b/],
+    ['pause', /\b(pausa|pausar|espere|alto)\b/],
+    ['start', /\b(iniciar|inicia|empezar|reanudar|reloj)\b/]
+  ];
+  const norm = t => String(t).toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g, '');
+  function matchCmd(t) { const n = norm(t); const c = COMMANDS.find(([, re]) => re.test(n)); return c ? c[0] : null; }
+  const recLang = () => { const l = (navigator.language || ''); return /^es/i.test(l) ? l : 'es-MX'; };
+  const autoHint = () => AUTO.how === 'mano' ? 'Cuando esté listo, tape la cámara de arriba con la mano.' : 'Cuando esté listo, diga Siguiente.';
+
+  function autoStart() {
+    const voice = !!Rec() && navigator.onLine !== false;
+    const md = navigator.mediaDevices && navigator.mediaDevices.getUserMedia ? navigator.mediaDevices : null;
+    if (!voice && !md) { toast('Este teléfono no permite el modo automático. Use "Empezar los pasos".'); return; }
+    const begin = how => {
+      AUTO.on = true; AUTO.how = how; AUTO.fails = []; AUTO.lastMiss = 0;
+      keepAwake(); go('step'); autoRead();
+    };
+    // Los permisos se piden ahora, antes de lavarse las manos, para que no aparezcan después.
+    if (!md) { begin('voz'); return; }
+    md.getUserMedia({ audio: voice, video: true })
+      .then(st => { st.getTracks().forEach(t => t.stop()); begin(voice ? 'voz' : 'mano'); })
+      .catch(() => {
+        if (voice) md.getUserMedia({ audio: true }).then(st => { st.getTracks().forEach(t => t.stop()); begin('voz'); })
+          .catch(() => toast('Para el modo automático, permita el uso del micrófono.'));
+        else toast('Para el modo automático, permita el uso de la cámara.');
+      });
+  }
+  function autoExit() {
+    if (!AUTO.on) return;
+    AUTO.on = false; stopListen(); camStop();
+    if (!S.running) releaseWake(true);
+  }
+  function autoSay(text, then) { speakParts(text, then || autoListen); }
+  function autoRead() {
+    if (!AUTO.on || S.screen !== 'step') return;
+    const st = STEPS[S.step], timed = st.timer && !S.running && !S.done && S.remaining === S.total;
+    if (timed) autoSay(`${stepSay()} El reloj empieza ahora. Le aviso cuando termine.`, () => { startTimer(); render(); autoListen(); });
+    else autoSay(`${stepSay()} ${autoHint()}`);
+  }
+  function autoCmd(c) {
+    if (!AUTO.on) return;
+    if (c === 'next') { stepNext(); if (AUTO.on) autoRead(); }
+    else if (c === 'prev') { stepPrev(); if (AUTO.on) autoRead(); }
+    else if (c === 'repeat') autoRead();
+    else if (c === 'pause' && S.running) { pauseTimer(); render(); autoSay('Reloj en pausa. Para seguir, diga Iniciar.'); }
+    else if (c === 'start' && STEPS[S.step].timer && !S.running && !S.done) { startTimer(); render(); autoSay('El reloj sigue.'); }
+    else autoListen();
+  }
+  function autoListen() {
+    if (!AUTO.on || S.screen !== 'step' || SP.state === 'playing') return;
+    if (AUTO.how === 'mano') { camStart(); render(); return; }
+    AUTO.want = true;
+    if (AUTO.rec) return;
+    const R = Rec(); if (!R) { toHand(); return; }
+    const r = new R();
+    r.lang = recLang(); r.continuous = true; r.interimResults = true; r.maxAlternatives = 3;
+    r.onresult = e => {
+      for (let i = e.resultIndex || 0; i < e.results.length; i++) {
+        const res = e.results[i];
+        for (let j = 0; j < res.length; j++) {
+          const c = matchCmd(res[j].transcript);
+          if (c) { AUTO.fails = []; stopListen(); autoCmd(c); return; }
+        }
+        // Algo se dijo, pero no es una orden: se avisa como mucho cada 20 segundos (ruido de la casa).
+        if (res.isFinal && String(res[0].transcript).trim() && Date.now() - AUTO.lastMiss > 20000) {
+          AUTO.lastMiss = Date.now(); stopListen();
+          autoSay(AUTO.how === 'mano' ? autoHint() : 'No le entendí. Diga Siguiente, Repetir o Atrás.'); return;
+        }
+      }
+    };
+    r.onerror = e => {
+      const err = e && e.error;
+      if (['not-allowed', 'service-not-allowed', 'network', 'language-not-supported', 'audio-capture'].includes(err)) { AUTO.rec = null; toHand(); }
+    };
+    r.onend = () => {
+      if (AUTO.rec !== r) return;
+      AUTO.rec = null;
+      if (!AUTO.on || !AUTO.want) return;
+      // Si se corta una y otra vez sin oír nada útil, se pasa a la mano.
+      const now = Date.now(); AUTO.fails = AUTO.fails.filter(t => now - t < 10000).concat(now);
+      if (AUTO.fails.length > 6) { toHand(); return; }
+      setTimeout(autoListen, 250);
+    };
+    AUTO.rec = r;
+    try { r.start(); } catch (err) { AUTO.rec = null; }
+    render();
+  }
+  function stopListen() {
+    AUTO.want = false; AUTO.camWant = false;
+    const r = AUTO.rec; AUTO.rec = null;
+    if (r) { try { r.abort(); } catch (e) {} }
+  }
+  function toHand() {
+    if (!AUTO.on || AUTO.how === 'mano') return;
+    stopListen(); AUTO.how = 'mano';
+    if (!(navigator.mediaDevices && navigator.mediaDevices.getUserMedia)) { autoExit(); render(); announce('No puedo oírle. Pida a un acompañante que le muestre los pasos.'); return; }
+    autoSay('No puedo oírle. Para pasar al siguiente paso, tape la cámara de arriba con la mano, sin tocar el teléfono.');
+  }
+  // La cámara de adelante detecta cuando la mano la tapa (la imagen se pone oscura un momento).
+  function camStart() {
+    AUTO.camWant = true;
+    if (AUTO.cam) return;
+    AUTO.cam = { pending: true };
+    navigator.mediaDevices.getUserMedia({ video: { facingMode: 'user', width: 160, height: 120 }, audio: false }).then(stream => {
+      if (!AUTO.on) { stream.getTracks().forEach(t => t.stop()); AUTO.cam = null; return; }
+      const v = document.createElement('video'); v.muted = true; v.playsInline = true; v.setAttribute('playsinline', ''); v.srcObject = stream;
+      try { v.play(); } catch (e) {}
+      const c = document.createElement('canvas'); c.width = 32; c.height = 24;
+      const g = c.getContext('2d', { willReadFrequently: true });
+      const cam = AUTO.cam = { stream, base: 0, dark: 0, t: null };
+      cam.t = setInterval(() => {
+        if (v.readyState < 2) return;
+        g.drawImage(v, 0, 0, 32, 24);
+        const d = g.getImageData(0, 0, 32, 24).data; let sum = 0;
+        for (let i = 0; i < d.length; i += 4) sum += d[i] * .3 + d[i + 1] * .59 + d[i + 2] * .11;
+        const lum = sum / (d.length / 4);
+        if (!cam.base) { cam.base = lum; return; }
+        if (lum < Math.max(15, cam.base * .35)) {
+          // Tapada unos 0,6 segundos = Siguiente. Hay que destaparla antes de volver a usarla.
+          if (++cam.dark === 6 && AUTO.camWant && SP.state !== 'playing') { AUTO.camWant = false; autoCmd('next'); }
+        } else { cam.dark = 0; cam.base = cam.base * .9 + lum * .1; }
+      }, 100);
+    }).catch(() => { AUTO.cam = null; autoExit(); render(); announce('No puedo usar la cámara. Pida a un acompañante que le muestre los pasos.'); });
+  }
+  function camStop() {
+    const cam = AUTO.cam; AUTO.cam = null; AUTO.camWant = false;
+    if (cam && cam.t) clearInterval(cam.t);
+    if (cam && cam.stream) cam.stream.getTracks().forEach(t => t.stop());
+  }
+  function autoBar() {
+    if (!AUTO.on) return '';
+    const status = SP.state === 'playing' ? 'Leyendo el paso…'
+      : AUTO.how === 'mano' ? 'Tape la cámara de arriba con la mano para seguir.'
+      : AUTO.rec ? 'Le escucho. Diga «Siguiente», «Repetir» o «Atrás».' : 'Preparando el micrófono…';
+    return `<div class="autobar ${AUTO.rec || (AUTO.how === 'mano' && AUTO.camWant) ? 'on' : ''}" role="status">
+      <span class="mic">${AUTO.how === 'mano' ? I.hand : I.mic}</span><span>${status}</span>
+      <button data-act="auto-exit">Salir</button></div>`;
   }
 
   // ---------- Recambio en curso ----------
@@ -760,7 +966,7 @@ html.modo-app, html.modo-app body { height: 100%; margin: 0; }
     try {
       if (!inFlow()) { localStorage.removeItem('dp-progress'); return; }
       localStorage.setItem('dp-progress', JSON.stringify({
-        at: Date.now(), screen: S.screen, step: S.step, checks: S.checks, practice: S.practice, session: S.session, aspect: S.aspect, reg: S.reg,
+        at: Date.now(), screen: S.screen, step: S.step, sub: S.sub, checks: S.checks, practice: S.practice, session: S.session, aspect: S.aspect, reg: S.reg,
         timer: { total: S.total, remaining: S.remaining, running: S.running, endAt: S.endAt, done: S.done }
       }));
     } catch (e) {}
@@ -769,7 +975,7 @@ html.modo-app, html.modo-app body { height: 100%; margin: 0; }
     let p = null;
     try { p = JSON.parse(localStorage.getItem('dp-progress') || 'null'); } catch (e) {}
     if (!p || !CFG || !FLOW.includes(p.screen) || Date.now() - p.at > 12 * 3600 * 1000) return false;
-    Object.assign(S, { screen: p.screen, step: p.step, checks: p.checks, practice: p.practice, session: p.session, aspect: p.aspect, reg: p.reg });
+    Object.assign(S, { screen: p.screen, step: p.step, sub: p.sub || 0, checks: p.checks, practice: p.practice, session: p.session, aspect: p.aspect, reg: p.reg });
     const tm = p.timer || {};
     S.total = tm.total || 0; S.remaining = tm.remaining || 0; S.done = !!tm.done; S.announced = true;
     if (tm.running && tm.endAt) {
@@ -825,12 +1031,18 @@ html.modo-app, html.modo-app body { height: 100%; margin: 0; }
           </div>`).join('')}
         </div>
         ${sayBtn(PREP.map(p => p.label).join('. ') + '.')}
-      `, `<button class="btn" data-go="step" ${all ? '' : 'disabled'}>${all ? 'Empezar los pasos' : `Faltan ${S.checks.filter(c => !c).length}`} ${I.next}</button>`, { back: 'home' });
+        <p class="lead autonote">${I.mic}<span><b>Modo automático:</b> la app le lee cada paso y usted dice «Siguiente» para avanzar, sin tocar el teléfono.</span></p>
+      `, `<div class="stack">
+        <button class="btn" data-go="step" ${all ? '' : 'disabled'}>${all ? 'Empezar los pasos' : `Faltan ${S.checks.filter(c => !c).length}`} ${I.next}</button>
+        <button class="btn ghost" data-act="auto-start" ${all ? '' : 'disabled'}>${I.mic} Modo automático</button>
+      </div>`, { back: 'home' });
     },
 
     step() {
-      const st = STEPS[S.step], n = STEPS.length;
-      const last = S.step === n - 1;
+      const st = STEPS[S.step], n = STEPS.length, ns = nSubs(st);
+      const sub = S.sub > 0 ? st.subs[S.sub - 1] : null;
+      const last = S.step === n - 1 && S.sub === ns;
+      const subName = st.subLabel || 'Parte';
       let timer = '';
       if (st.timer) {
         timer = `<div class="timer ${S.done ? 'done' : ''}">
@@ -843,25 +1055,51 @@ html.modo-app, html.modo-app body { height: 100%; margin: 0; }
           </div>
         </div>`;
       }
+      const steps = `<div class="progress" aria-hidden="true">${STEPS.map((_, i) => `<i class="${i <= S.step ? 'on' : ''}"></i>`).join('')}</div>`;
+      const video = v => v
+        ? `<button class="listen" data-act="video">${I.video}Ver video</button>`
+        : `<button class="listen" disabled title="Todavía no hay video para este paso">${I.video}Ver video</button>`;
+      const foot = `
+        <button class="btn ghost" id="prev" aria-label="Paso anterior">${I.back}</button>
+        <button class="btn" id="next">${last ? 'Continuar' : 'Siguiente'} ${I.next}</button>
+      `;
+      if (sub) {
+        const pos = `${subName} ${S.sub} de ${ns}`;
+        return shell(`Paso ${S.step + 1} de ${n}`, `
+        ${steps}
+        <div class="stepno">Paso ${S.step + 1} · ${pos}</div>
+        <p class="subof">${st.title}</p>
+        <h2 class="scr">${sub.title}</h2>
+        <div class="subdots" aria-hidden="true">${st.subs.map((_, i) => `<i class="${i < S.sub ? 'on' : ''}"></i>`).join('')}</div>
+        <div class="pic" role="img" aria-label="${sub.title}">${P[sub.pic || st.pic]}</div>
+        ${sub.text ? `<p class="steptext">${sub.text}</p>` : ''}
+        ${autoBar()}
+        <div class="media">
+          ${sayBtn(stepSay())}
+          ${video(sub.video)}
+        </div>
+        ${timer}
+        ${sub.tip ? `<div class="tip">${I.alert}<span>${sub.tip}</span></div>` : ''}
+      `, foot, { back: null });
+      }
+      const intro = subCount(st);
       return shell(`Paso ${S.step + 1} de ${n}`, `
-        <div class="progress" aria-hidden="true">${STEPS.map((_, i) => `<i class="${i <= S.step ? 'on' : ''}"></i>`).join('')}</div>
+        ${steps}
         <div class="stepno">Paso ${S.step + 1} de ${n}</div>
         <h2 class="scr">${st.title}</h2>
         <div class="pic" role="img" aria-label="${st.title}">${P[st.pic]}</div>
         <p class="steptext">${st.text}</p>
         ${st.items ? `<ol class="substeps">${st.items.map(x => `<li>${x}</li>`).join('')}</ol>` : ''}
+        ${ns ? `<p class="subintro">Son ${intro}. Al tocar Siguiente le explicamos cada uno.</p>
+        <ol class="substeps">${st.subs.map(x => `<li>${x.title}</li>`).join('')}</ol>` : ''}
+        ${autoBar()}
         <div class="media">
-          ${sayBtn(`${st.title}. ${st.text} ${st.items ? st.items.join(' ') : ''} ${st.tip || ''}`.replace(/\s+/g, ' ').trim())}
-          ${st.video
-            ? `<button class="listen" data-act="video">${I.video}Ver video</button>`
-            : `<button class="listen" disabled title="Todavía no hay video para este paso">${I.video}Ver video</button>`}
+          ${sayBtn(stepSay())}
+          ${video(st.video)}
         </div>
         ${timer}
         ${st.tip ? `<div class="tip">${I.alert}<span>${st.tip}</span></div>` : ''}
-      `, `
-        <button class="btn ghost" id="prev" aria-label="Paso anterior">${I.back}</button>
-        <button class="btn" id="next">${last ? 'Continuar' : 'Siguiente'} ${I.next}</button>
-      `, { back: S.step === 0 ? 'prep' : null });
+      `, foot, { back: S.step === 0 ? 'prep' : null });
     },
 
     aspect() {
@@ -1111,8 +1349,26 @@ html.modo-app, html.modo-app body { height: 100%; margin: 0; }
     S._scrollTop = false;
     saveProgress();
   }
+  // Dentro de un paso con subpasos, Siguiente avanza al siguiente subpaso sin reiniciar el reloj del paso.
+  function stepNext() {
+    stopSpeak();
+    if (S.sub < nSubs(STEPS[S.step])) { S.sub++; S._scrollTop = true; render(); }
+    else if (S.step < STEPS.length - 1) { S.step++; S.sub = 0; resetTimer(STEPS[S.step].timer); S._scrollTop = true; render(); }
+    else {
+      const wasAuto = AUTO.on;
+      go('aspect');
+      if (wasAuto) announce('Terminó los pasos. Ya puede tocar el teléfono para decir cómo se ve el líquido.');
+    }
+  }
+  function stepPrev() {
+    stopSpeak();
+    if (S.sub > 0) { S.sub--; S._scrollTop = true; render(); }
+    else if (S.step > 0) { S.step--; S.sub = nSubs(STEPS[S.step]); resetTimer(STEPS[S.step].timer); S._scrollTop = true; render(); }
+    else go('prep');
+  }
   function go(screen) {
     stopSpeak();
+    if (screen !== 'step') autoExit();
     clearTimeout(S.scanT);
     S.modal = null;
     if (screen === 'home' || screen === 'finished') S.session = null;
@@ -1120,7 +1376,7 @@ html.modo-app, html.modo-app body { height: 100%; margin: 0; }
     if (screen === 'home') S.practice = false;
     if (screen !== 'settings') S.confirmReset = false;
     if (screen === 'prep' && S.screen === 'home') S.checks = PREP.map(() => false);
-    if (screen === 'step') { if (S.screen === 'prep') S.step = 0; resetTimer(STEPS[S.step].timer); }
+    if (screen === 'step') { if (S.screen === 'prep') { S.step = 0; S.sub = 0; } resetTimer(STEPS[S.step].timer); }
     if (screen !== 'step') resetTimer(0);
     if (screen === 'register') {
       S.reg.vol = CFG.bag;
@@ -1153,6 +1409,8 @@ html.modo-app, html.modo-app body { height: 100%; margin: 0; }
         case 'prep-info': stopSpeak(); S.modal = { type: 'prep', i: +t.dataset.i }; render(); break;
         case 'prep-done': S.checks[S.modal.i] = true; S.modal = null; stopSpeak(); render(); break;
         case 'video': stopSpeak(); S.modal = { type: 'video' }; render(); break;
+        case 'auto-start': autoStart(); break;
+        case 'auto-exit': autoExit(); stopSpeak(); render(); toast('Salió del modo automático.'); break;
         case 'reset': S.confirmReset = true; render(); break;
         case 'reset-no': S.confirmReset = false; render(); break;
         case 'reset-yes':
@@ -1190,15 +1448,8 @@ html.modo-app, html.modo-app body { height: 100%; margin: 0; }
       return;
     }
     switch (t.id) {
-      case 'next':
-        stopSpeak();
-        if (S.step < STEPS.length - 1) { S.step++; resetTimer(STEPS[S.step].timer); S._scrollTop = true; render(); }
-        else go('aspect');
-        break;
-      case 'prev':
-        stopSpeak();
-        if (S.step > 0) { S.step--; resetTimer(STEPS[S.step].timer); S._scrollTop = true; render(); } else go('prep');
-        break;
+      case 'next': stepNext(); if (AUTO.on) autoRead(); break;
+      case 'prev': stepPrev(); if (AUTO.on) autoRead(); break;
       case 't-toggle':
         if (S.running) pauseTimer(); else startTimer();
         render(); break;
@@ -1247,7 +1498,7 @@ html.modo-app, html.modo-app body { height: 100%; margin: 0; }
   document.addEventListener('visibilitychange', () => {
     if (document.hidden) return;
     stopAlarm();
-    if (S.running) { tick(); keepAwake(); }
+    if (S.running || AUTO.on) { tick(); keepAwake(); }
     if (S.done && !S.announced) { announceDone(); if (S.screen === 'step' && !S.modal) render(); }
   });
 
