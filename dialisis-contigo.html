@@ -485,46 +485,47 @@ html.modo-app, html.modo-app body { height: 100%; margin: 0; }
   //     El paso se muestra primero con el resumen y el reloj, y luego cada subpaso en su pantalla.
   //   subLabel: cómo se llama cada subpaso en pantalla ("Movimiento 3 de 8"). Por defecto, "Parte".
   const WASH = 'Frote las manos hasta que termine el reloj';
+  // Textos: frases cortas, una idea por frase. El texto no repite el título, porque se leen seguidos.
   const STEPS = [
-    { pic: 'hands', title: 'Lave el lavamanos', text: 'Lave el lavamanos con jabón y enjuáguelo.' },
-    { pic: 'mask', title: 'Póngase la mascarilla', text: 'Usted y el paciente se ponen la mascarilla. Debe tapar la nariz y la boca.', tip: 'No la toque más. Si la toca, lávese las manos otra vez.' },
-    { pic: 'hands', title: 'Primer lavado de manos', text: 'Lávese las manos con agua y jabón. Enjuague con las manos hacia arriba. No las sacuda.', tip: 'Séquese con una servilleta y cierre el grifo con esa misma servilleta.', timer: 60, timerLabel: WASH },
-    { pic: 'cloth', title: 'Doble el paño', text: 'Doble el pañito dos veces, hasta que quede un cuadrado. Va a usar una cara distinta para cada cosa.',
-      items: ['Cara 1: la que se ve.', 'Cara 2: el otro lado.', 'Caras 3 y 4: voltee el segundo doblez.', 'Cara 5: abra el paño y use el lado que nunca se tocó.'] },
-    { pic: 'table', title: 'Cara 1: limpie la mesa 2', text: 'Ponga alcohol en el paño, no en la mesa. Limpie de adentro hacia afuera. Al final limpie los bordes y termine donde empezó.', tip: 'El último borde es el que está delante de usted.' },
-    { pic: 'inspect', title: 'Cara 2: limpie las bolsas', text: 'Ponga alcohol en la cara 2. Limpie la bolsa de arriba hacia abajo, sin devolverse, por todos los pliegues. Póngala en la mesa 2.', tip: 'Limpie también el borde por donde la agarró. Haga lo mismo con la bolsa de repuesto.' },
-    { pic: 'bottle', title: 'Cara 3: limpie el Exsept', text: 'Ponga alcohol en la cara 3. Frote primero la base y luego suba en forma de tornillo hasta la tapa.', tip: 'Quite la tapa con el paño, sin tocarla con la mano. Déjela boca abajo. Ponga el Exsept en la mesa 2.' },
-    { pic: 'clamp', title: 'Cara 4: limpie la pinza', text: 'Ponga alcohol en la cara 4. Abra la pinza y límpiela completa. Póngala en la mesa 2.' },
-    { pic: 'pole', title: 'Cara 5: limpie el paral', text: 'Abra el paño y ponga alcohol en el lado que nunca se tocó. Limpie el paral de adentro hacia afuera y de arriba hacia abajo, hasta la base.' },
-    { pic: 'trash', title: 'Bote el paño', text: 'Bote el pañito. Ya no se vuelve a usar.' },
-    { pic: 'hands', title: 'Segundo lavado de manos', text: 'Lávese las manos otra vez con agua y jabón. Séquese con un pañito limpio.', tip: 'Este lavado es para abrir el empaque y preparar la línea.', timer: 60, timerLabel: WASH },
-    { pic: 'pack', title: 'Abra el empaque', text: 'Rasgue el empaque de la bolsa por las pestañas. Deje el material a su derecha.', tip: 'No saque todavía nada de adentro.' },
-    { pic: 'line', title: 'Prepare la línea del paciente', text: 'Ponga un pañito limpio. Saque la línea de la fajita del paciente y póngala sobre el pañito.', tip: 'Revise que la línea esté cerrada. El paciente puede ayudar.' },
-    { pic: 'line', title: 'Rocíe la línea con alcohol', text: 'Rocíe con alcohol la línea que está sobre el pañito.' },
-    { pic: 'hands', title: 'Lavado de manos quirúrgico', text: 'Lávese las manos con agua y jabón durante 5 minutos. Mantenga las manos a la altura del pecho. Haga cada movimiento 10 veces.', timer: 5 * 60, timerLabel: 'Lave hasta que termine el reloj', subLabel: 'Movimiento',
+    { pic: 'hands', title: 'Lave el lavamanos', text: 'Use jabón y enjuáguelo.' },
+    { pic: 'mask', title: 'Póngase la mascarilla', text: 'Usted y el paciente. Debe tapar nariz y boca.', tip: 'No la toque más. Si la toca, lávese las manos.' },
+    { pic: 'hands', title: 'Primer lavado de manos', text: 'Use agua y jabón. Enjuague con las manos hacia arriba. No las sacuda.', tip: 'Séquese con una servilleta. Cierre el grifo con ella.', timer: 60, timerLabel: WASH },
+    { pic: 'cloth', title: 'Doble el paño', text: 'Dóblelo dos veces, en cuadrado. Cada cara es para una cosa.',
+      items: ['Cara 1: la que se ve.', 'Cara 2: el otro lado.', 'Caras 3 y 4: voltee el segundo doblez.', 'Cara 5: ábralo. Use el lado que nunca tocó.'] },
+    { pic: 'table', title: 'Cara 1: limpie la mesa 2', text: 'Ponga alcohol en el paño, no en la mesa. Limpie de adentro hacia afuera. Termine con los bordes, donde empezó.', tip: 'El último borde es el que tiene delante.' },
+    { pic: 'inspect', title: 'Cara 2: limpie las bolsas', text: 'Ponga alcohol en la cara 2. Limpie la bolsa de arriba hacia abajo, sin devolverse. Pase por todos los pliegues. Déjela en la mesa 2.', tip: 'Limpie también el borde donde la agarró. Repita con la bolsa de repuesto.' },
+    { pic: 'bottle', title: 'Cara 3: limpie el Exsept', text: 'Ponga alcohol en la cara 3. Frote la base. Suba dando vueltas hasta la tapa.', tip: 'Quite la tapa con el paño, sin tocarla. Déjela boca abajo. Ponga el Exsept en la mesa 2.' },
+    { pic: 'clamp', title: 'Cara 4: limpie la pinza', text: 'Ponga alcohol en la cara 4. Abra la pinza y límpiela toda. Déjela en la mesa 2.' },
+    { pic: 'pole', title: 'Cara 5: limpie el paral', text: 'Abra el paño. Ponga alcohol en el lado que nunca tocó. Limpie el paral de arriba hacia abajo, hasta la base. Vaya de adentro hacia afuera.' },
+    { pic: 'trash', title: 'Bote el paño', text: 'No se vuelve a usar.' },
+    { pic: 'hands', title: 'Segundo lavado de manos', text: 'Use agua y jabón. Séquese con un pañito limpio.', tip: 'Este lavado es para abrir el empaque y preparar la línea.', timer: 60, timerLabel: WASH },
+    { pic: 'pack', title: 'Abra el empaque', text: 'Rásguelo por las pestañas. Deje el material a su derecha.', tip: 'Todavía no saque nada.' },
+    { pic: 'line', title: 'Prepare la línea del paciente', text: 'Ponga un pañito limpio. Saque la línea de la fajita y póngala encima.', tip: 'Revise que la línea esté cerrada. El paciente puede ayudar.' },
+    { pic: 'line', title: 'Rocíe la línea con alcohol', text: 'La línea que está sobre el pañito.' },
+    { pic: 'hands', title: 'Lavado de manos quirúrgico', text: 'Use agua y jabón durante 5 minutos. Tenga las manos a la altura del pecho. Haga cada movimiento 10 veces.', timer: 5 * 60, timerLabel: 'Lave hasta que termine el reloj', subLabel: 'Movimiento',
       subs: [
-        { title: 'Palma con palma', text: 'Palma con palma. Hágalo 10 veces.' },
-        { title: 'Palma con dorso', text: 'Palma con dorso, en las dos manos. Hágalo 10 veces.' },
-        { title: 'Dedo por dedo', text: 'Dedo por dedo. Hágalo 10 veces.' },
-        { title: 'Uñas y cutícula', text: 'Uñas y cutícula. Hágalo 10 veces.' },
-        { title: 'Candadito', text: 'Los dedos entrelazados. Hágalo 10 veces.' },
-        { title: 'Los pulgares', text: 'Los pulgares, con los dedos de su misma mano. Hágalo 10 veces.' },
-        { title: 'Entre los dedos', text: 'Entre los dedos, hacia afuera y luego hacia adentro. Hágalo 10 veces.' },
-        { title: 'De la muñeca al codo', text: 'De la muñeca al codo, en círculos. Hágalo 10 veces.' }
+        { title: 'Palma con palma', text: 'Hágalo 10 veces.' },
+        { title: 'Palma con dorso', text: 'En las dos manos. Hágalo 10 veces.' },
+        { title: 'Dedo por dedo', text: 'Hágalo 10 veces.' },
+        { title: 'Uñas y cutícula', text: 'Hágalo 10 veces.' },
+        { title: 'Candadito', text: 'Entrelace los dedos. Hágalo 10 veces.' },
+        { title: 'Los pulgares', text: 'Frótelos con los dedos de la misma mano. Hágalo 10 veces.' },
+        { title: 'Entre los dedos', text: 'Hacia afuera y luego hacia adentro. Hágalo 10 veces.' },
+        { title: 'De la muñeca al codo', text: 'En círculos. Hágalo 10 veces.' }
       ] },
-    { pic: 'hands', title: 'Enjuague y seque', text: 'Enjuague sin juntar las manos: primero las manos y luego hacia el codo. No las sacuda. Seque sin frotar con un pañito limpio: una mano con cada cara.', tip: 'Si el lavamanos está fuera de la habitación, cúbrase las manos con la servilleta y abra la puerta con ella.' },
-    { pic: 'handsup', title: 'No toque nada más', text: 'Desde ahora, lleve las manos hacia arriba. Toque solo el material, ni siquiera su cara.', tip: 'Si toca algo, vuelva a lavarse las manos.' },
-    { pic: 'inspect', title: 'Saque la bolsa y revísela', text: 'Saque el paquete con su mano dominante y bote el empaque. Revise la concentración (el color del tapón), la fecha de vencimiento y que no tenga fugas.', tip: 'Si la bolsa tiene una fuga, use la bolsa de repuesto.' },
-    { pic: 'pack', title: 'Separe la bolsa de drenaje', text: 'Voltee el paquete y quite los precintos. Bótelos hacia la derecha. Quite la bolsa que envuelve la bolsa de drenaje y despegue las líneas.', tip: 'Despegue bien la bolsa de drenaje. Si queda pegada, el líquido no sale bien.' },
-    { pic: 'fill', title: 'Cuelgue la bolsa', text: 'Cuelgue en el paral solo la bolsa de solución. Ponga la bolsa de drenaje en el suelo.' },
-    { pic: 'clamp', title: 'Ponga la pinza', text: 'Ponga la pinza en la línea de infusión, que es la línea blanca.' },
-    { pic: 'connect', title: 'Sostenga las líneas', text: 'Agarre la línea de infusión por el acople verde, sin rozar la punta. Sostenga la cámara azul entre el dedo índice y el medio. Con el pulgar, sostenga la línea del paciente.' },
-    { pic: 'connect', title: 'Quite los tapones y ponga Exsept', text: 'Afloje los dos tapones, primero el más lejano al paciente, y quítelos. Ponga un puff de Exsept en cada punta, a unos 10 centímetros.', tip: 'No toque las puntas.' },
-    { pic: 'connect', title: 'Conecte', text: 'Conecte sin apuro.', tip: 'Cuide de no halar el catéter.' },
-    { pic: 'drain', title: 'Drene el líquido', text: 'Abra la línea del paciente. Si sale líquido, espere a que salga todo. Luego cierre la línea.', tip: 'Usted verá cuándo termina: el líquido deja de salir.' },
-    { pic: 'flush', title: 'Saque el aire de la línea', text: 'Con la línea del paciente cerrada, rompa el acople verde y quite la pinza. Cuente hasta 5. Luego ponga la pinza en la línea de drenaje.', tip: 'El aire en la barriga da mucho dolor.', timer: 5, timerLabel: 'Cuente hasta 5' },
-    { pic: 'fill', title: 'Pase el líquido nuevo', text: 'Revise que no quede aire en la línea blanca. Abra la línea del paciente y deje pasar todo el líquido.', tip: 'Usted verá cuándo termina: la bolsa queda vacía.' },
-    { pic: 'disconnect', title: 'Desconecte', text: 'Siga estos pasos en orden.', tip: 'El líquido queda en la barriga el tiempo que le indicó el médico.',
+    { pic: 'hands', title: 'Enjuague y seque', text: 'Enjuague sin juntar las manos: de las manos hacia el codo. No las sacuda. Seque sin frotar, con un pañito limpio: una cara para cada mano.', tip: 'Si el lavamanos está fuera del cuarto, abra la puerta con la servilleta.' },
+    { pic: 'handsup', title: 'No toque nada más', text: 'Desde ahora, tenga las manos hacia arriba. Toque solo el material, ni su cara.', tip: 'Si toca algo, lávese las manos otra vez.' },
+    { pic: 'inspect', title: 'Saque la bolsa y revísela', text: 'Saque el paquete con la mano que más usa. Bote el empaque. Revise el color del tapón: es la concentración. Revise la fecha de vencimiento y que no tenga fugas.', tip: 'Si tiene una fuga, use la bolsa de repuesto.' },
+    { pic: 'pack', title: 'Separe la bolsa de drenaje', text: 'Voltee el paquete. Quite los precintos y bótelos a la derecha. Quite la bolsa que cubre la de drenaje. Despegue las líneas.', tip: 'Despegue bien la bolsa de drenaje. Si queda pegada, el líquido no sale bien.' },
+    { pic: 'fill', title: 'Cuelgue la bolsa', text: 'En el paral va solo la bolsa de solución. La de drenaje va en el suelo.' },
+    { pic: 'clamp', title: 'Ponga la pinza', text: 'En la línea blanca. Es la línea de infusión.' },
+    { pic: 'connect', title: 'Sostenga las líneas', text: 'Agarre la línea blanca por el acople verde. No roce la punta. Ponga la cámara azul entre el índice y el dedo del medio. Con el pulgar, sostenga la línea del paciente.' },
+    { pic: 'connect', title: 'Quite los tapones y ponga Exsept', text: 'Afloje los dos tapones y quítelos. Empiece por el más lejos del paciente. Ponga un puff de Exsept en cada punta, a unos 10 centímetros.', tip: 'No toque las puntas.' },
+    { pic: 'connect', title: 'Conecte', text: 'Hágalo sin apuro.', tip: 'Cuide de no halar el catéter.' },
+    { pic: 'drain', title: 'Drene el líquido', text: 'Abra la línea del paciente. Si sale líquido, espere a que salga todo. Luego cierre la línea.', tip: 'Termina cuando el líquido deja de salir.' },
+    { pic: 'flush', title: 'Saque el aire de la línea', text: 'Deje cerrada la línea del paciente. Rompa el acople verde y quite la pinza. Cuente hasta 5. Luego ponga la pinza en la línea de drenaje.', tip: 'El aire en la barriga duele mucho.', timer: 5, timerLabel: 'Cuente hasta 5' },
+    { pic: 'fill', title: 'Pase el líquido nuevo', text: 'Revise que no haya aire en la línea blanca. Abra la línea del paciente. Deje pasar todo el líquido.', tip: 'Termina cuando la bolsa queda vacía.' },
+    { pic: 'disconnect', title: 'Desconecte', text: 'Siga estos pasos en orden.', tip: 'El líquido se queda en la barriga el tiempo que dijo el médico.',
       subs: [
         { title: 'Cierre la línea del paciente' },
         { title: 'Cierre el obturador inviolable' },
@@ -533,7 +534,7 @@ html.modo-app, html.modo-app body { height: 100%; margin: 0; }
         { title: 'Rompa el acople rojo' },
         { title: 'Acorte la línea y guárdela en la fajita' }
       ] },
-    { pic: 'scale', title: 'Pese y mire el líquido', text: 'Pese la bolsa de drenaje. Mire el líquido que salió. En la siguiente pantalla le preguntaremos cómo se ve.' }
+    { pic: 'scale', title: 'Pese y mire el líquido', text: 'Pese la bolsa de drenaje y mire el líquido. Luego le preguntamos cómo se ve.' }
   ];
   const ALARMS = [
     { key: 'turbio', title: 'Líquido turbio', icon: fluid('#c9b27a', '.9', '<g fill="#8a7440"><circle cx="26" cy="38" r="2"/><circle cx="36" cy="44" r="2"/><circle cx="30" cy="50" r="2"/><circle cx="40" cy="34" r="2"/></g>'), what: 'Puede ser una infección (peritonitis).', todo: 'Guarde la bolsa sin tirarla y llame hoy mismo al hospital.' },
@@ -545,7 +546,7 @@ html.modo-app, html.modo-app body { height: 100%; margin: 0; }
   ];
   const APP_NAME = 'Diálisis Contigo';
   // Versión: PRODUCCIÓN.GRANDE.RELEASE.MENOR (ver CLAUDE.md). Debe ser igual a VERSION en sw.js.
-  const APP_VERSION = '0.0.12.1';
+  const APP_VERSION = '0.0.13.1';
 
   // ---------- Configuración de cada familia ----------
   // Se llena en la configuración inicial y se guarda solo en este teléfono.
