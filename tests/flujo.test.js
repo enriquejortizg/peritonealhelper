@@ -158,7 +158,7 @@ const NSTEPS = STEPS_SRC.match(/\{ pic:/g).length + (STEPS_SRC.match(/\{ title:/
   click({ data: { go: 'prep' } });
   for (let i = 0; i < 5; i++) click({ data: { check: String(i) } });
   click({ data: { go: 'step' } });
-  for (let i = 0; i < 14; i++) click({ id: 'next' });
+  for (let i = 0; i < 80 && !has('<h2 class="scr">Lavado de manos quirúrgico</h2>'); i++) click({ id: 'next' });
   ok(has('Lavado de manos quirúrgico') && has('data-act="home-ask"'), 'Durante el recambio, Inicio pide confirmación');
   ok(has('class="substeps"') && has('<li>Palma con palma</li>') && has('Son 8 movimientos'), 'El paso con subpasos muestra primero el resumen');
   click({ id: 't-toggle' });
